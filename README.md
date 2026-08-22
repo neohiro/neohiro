@@ -40,8 +40,8 @@
 ### 📊 GitHub stats
 
 <p align="center">
-  <a href="https://github.com/neohiro"><img src="https://github-readme-stats.vercel.app/api?username=neohiro&show_icons=true&theme=tokyonight&hide_border=true" alt="GitHub stats" /></a>
-  <a href="https://github.com/neohiro"><img src="https://github-readme-stats.vercel.app/api/top-langs/?username=neohiro&layout=compact&theme=tokyonight&hide_border=true" alt="Top languages" /></a>
+  <a href="https://github.com/neohiro"><img src="https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api?username=neohiro&show_icons=true&theme=tokyonight&hide_border=true&count_private=true" alt="GitHub stats" /></a>
+  <a href="https://github.com/neohiro"><img src="https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api/top-langs/?username=neohiro&layout=compact&theme=tokyonight&hide_border=true" alt="Top languages" /></a>
 </p>
 
 ### 🔗 Links
