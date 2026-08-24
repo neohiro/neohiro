@@ -86,7 +86,7 @@ stats_svg = "\n".join(parts)
 # ---------- languages card ----------
 n = len(top_langs)
 LH = 96 + n * 34
-LW = 420
+LW = 500
 lparts = [
     f'<svg xmlns="http://www.w3.org/2000/svg" width="{LW}" height="{LH}" viewBox="0 0 {LW} {LH}" role="img" aria-label="Top languages">',
     f'<rect x="1" y="1" width="{LW-2}" height="{LH-2}" rx="14" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>',
