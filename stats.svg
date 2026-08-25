@@ -1,17 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="500" height="300" viewBox="0 0 500 300" role="img" aria-label="GitHub stats">
-<rect x="1" y="1" width="498" height="298" rx="14" fill="#16161e" stroke="#2a2e42" stroke-width="1"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="350" viewBox="0 0 500 350" role="img" aria-label="GitHub stats">
+<rect x="1" y="1" width="498" height="348" rx="14" fill="#16161e" stroke="#2a2e42" stroke-width="1"/>
 <text x="28" y="52" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="20" font-weight="700" fill="#70a5fd">neohiro&#39;s GitHub Stats</text>
 <line x1="24" y1="68" x2="476" y2="68" stroke="#2a2e42" />
 <circle cx="34" cy="100" r="4" fill="#70a5fd"/>
 <text x="50" y="106" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">⭐ Total stars earned</text>
-<text x="472" y="106" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">129</text>
+<text x="472" y="106" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">130</text>
 <circle cx="34" cy="146" r="4" fill="#bb9af7"/>
 <text x="50" y="152" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">👥 Followers</text>
 <text x="472" y="152" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">12</text>
 <circle cx="34" cy="192" r="4" fill="#9ece6a"/>
 <text x="50" y="198" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">📦 Public repositories</text>
-<text x="472" y="198" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">29</text>
+<text x="472" y="198" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">31</text>
 <circle cx="34" cy="238" r="4" fill="#ff9e64"/>
 <text x="50" y="244" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">🔥 Contributions (last year)</text>
-<text x="472" y="244" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">556</text>
+<text x="472" y="244" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">2,083</text>
+<circle cx="34" cy="284" r="4" fill="#7dcfff"/>
+<text x="50" y="290" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">🤖 Agent-assisted commits</text>
+<text x="472" y="290" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">9</text>
 </svg>

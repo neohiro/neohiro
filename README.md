@@ -34,8 +34,8 @@
 
 <p align="center">
 <table><tr>
-<td><a href="https://github.com/neohiro"><img src="https://github-readme-stats-one-bice.vercel.app/api?username=neohiro&show_icons=true&theme=tokyonight&hide_border=true&count_private=true&include_all_commits=true" alt="GitHub stats" height="160" /></a></td>
-<td><a href="https://github.com/neohiro"><img src="https://github-readme-stats-one-bice.vercel.app/api/top-langs/?username=neohiro&layout=compact&theme=tokyonight&hide_border=true" alt="Top languages" height="160" /></a></td>
+<td><a href="https://github.com/neohiro"><img src="stats.svg" alt="GitHub stats" height="160" /></a></td>
+<td><a href="https://github.com/neohiro"><img src="langs.svg" alt="Top languages" height="160" /></a></td>
 </tr></table>
 </p>
 

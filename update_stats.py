@@ -2,6 +2,7 @@
 """Generate self-hosted GitHub stats & language SVG cards for the profile README."""
 import json, subprocess, os, sys
 from collections import defaultdict
+from urllib.parse import quote
 
 USER = "neohiro"
 
@@ -28,6 +29,12 @@ total_repos = len(repos)
 
 contrib = gql('{ user(login: "%s") { contributionsCollection { contributionCalendar { totalContributions } } } }' % USER)
 contributions = contrib["user"]["contributionsCollection"]["contributionCalendar"]["totalContributions"]
+
+# Commits pushed via LLM agents are authored with the agent identity, so they
+# never show up in the contribution calendar — count them explicitly instead.
+AGENT_EMAIL = "opencode-agent@users.noreply.github.com"
+agent_q = quote(f"user:{USER} author-email:{AGENT_EMAIL}")
+agent_commits = gh(f"/search/commits?q={agent_q}")["total_count"]
 
 lang_bytes = defaultdict(int)
 for r in repos:
@@ -60,13 +67,15 @@ def fmt(n):
     return f"{n:,}"
 
 # ---------- stats card ----------
-W, H = 500, 300
+W = 500
 rows = [
     ("⭐ Total stars earned", fmt(total_stars)),
     ("👥 Followers", fmt(followers)),
     ("📦 Public repositories", fmt(total_repos)),
     ("🔥 Contributions (last year)", fmt(contributions)),
+    ("🤖 Agent-assisted commits", fmt(agent_commits)),
 ]
+H = 106 + len(rows) * 46 + 14
 parts = [
     f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-label="GitHub stats">',
     f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="14" fill="{BG}" stroke="{BORDER}" stroke-width="1"/>',
@@ -109,5 +118,5 @@ langs_svg = "\n".join(lparts)
 
 open("stats.svg", "w", encoding="utf-8").write(stats_svg)
 open("langs.svg", "w", encoding="utf-8").write(langs_svg)
-print(f"stats: stars={total_stars} followers={followers} repos={total_repos} contrib={contributions}")
+print(f"stats: stars={total_stars} followers={followers} repos={total_repos} contrib={contributions} agent_commits={agent_commits}")
 print(f"languages: {[(k, round(v/total_lb*100,1)) for k,v in top_langs]}")
