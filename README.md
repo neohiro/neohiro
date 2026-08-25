@@ -1,21 +1,13 @@
 <h1 align="center">👽 METAPOD</h1>
 
 <p align="center">
-  <b><i>"Defense is the best defense."</i></b> 🛡️
-</p>
-
-<p align="center">
+  <b><i>"Defense is the best defense."</i></b> 🛡️<br/>
   Open-source <b>security hardening</b> &amp; <b>privacy tools</b> for Windows &amp; Linux
 </p>
 
----
-
 ### 🛡️ What I build
 
-- 🔒 **Endpoint hardening** — exploit mitigation, system debloating & STIG-style guides
-- 🌐 **DNS privacy** — encrypted DNS tooling, sinkholes & domain filtering
-- 🕸️ **Network defense** — honeypots, scanners & traffic monitoring
-- 🧩 **Practical utilities** — small, focused desktop apps written in Python
+🔒 Endpoint hardening &amp; debloating · 🌐 Encrypted DNS &amp; sinkholes · 🕸️ Honeypots &amp; traffic monitoring · 🧩 Practical Python utilities
 
 ### ⚔️ Featured projects
 
@@ -24,6 +16,7 @@
 | [![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=%E2%AD%90%20ExploitProtection)](https://github.com/neohiro/ExploitProtection) | Windows Exploit Protection settings (Ultimate) GUI |
 | [![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=%E2%AD%90%20dnscrypt%20proxy%20GUI)](https://github.com/neohiro/dnscrypt-proxy-gui) | Cross-platform GUI for dnscrypt-proxy |
 | [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple%20NetStrip)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
+| [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · permission autopilot |
 | [![LANScan](https://img.shields.io/github/stars/neohiro/LANScan?style=flat&label=%E2%AD%90%20LANScan)](https://github.com/neohiro/LANScan) | ARP / ICMP passive & active network scanner |
 | [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks |
 | [![SystemMonitor](https://img.shields.io/github/stars/neohiro/SystemMonitor?style=flat&label=%E2%AD%90%20SystemMonitor)](https://github.com/neohiro/SystemMonitor) | Cross-platform system health monitor |
@@ -40,17 +33,16 @@
 ### 📊 GitHub stats
 
 <p align="center">
-  <a href="https://github.com/neohiro"><img src="stats.svg" alt="GitHub stats" /></a>
-  <a href="https://github.com/neohiro"><img src="langs.svg" alt="Top languages" /></a>
+<table><tr>
+<td><a href="https://github.com/neohiro"><img src="https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api?username=neohiro&show_icons=true&theme=tokyonight&hide_border=true&count_private=true&include_all_commits=true" alt="GitHub stats" height="160" /></a></td>
+<td><a href="https://github.com/neohiro"><img src="https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api/top-langs/?username=neohiro&layout=compact&theme=tokyonight&hide_border=true" alt="Top languages" height="160" /></a></td>
+</tr></table>
 </p>
-
-### 🔗 Links
-
-🌐 **[frenzypenguin.media](https://linktr.ee/frenzypenguin.media)**
 
 ---
 
 <p align="center">
+  🌐 <b><a href="https://linktr.ee/frenzypenguin.media">frenzypenguin.media</a></b><br/><br/>
   <a href="https://github.com/sponsors/neohiro"><img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-%E2%9D%A4-EA4AAA?logo=githubsponsors&style=for-the-badge" alt="GitHub Sponsors"></a>&nbsp;&nbsp;
   <a href="https://www.patreon.com/frenzypenguin_media"><img src="https://img.shields.io/badge/Patreon-frenzypenguin__media-F96854?logo=patreon&style=for-the-badge" alt="Support on Patreon"></a>
 </p>
