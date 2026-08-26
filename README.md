@@ -21,6 +21,13 @@
 | [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks |
 | [![SystemMonitor](https://img.shields.io/github/stars/neohiro/SystemMonitor?style=flat&label=%E2%AD%90%20SystemMonitor)](https://github.com/neohiro/SystemMonitor) | Cross-platform system health monitor |
 
+### 🔐 Hardening guides
+
+| Guide | Description |
+| --- | --- |
+| 🪟 [windows](https://github.com/neohiro/windows) | STIG-style manual + automated Windows 10/11 new-install hardening checklist |
+| 🐧 [ubuntu](https://github.com/neohiro/ubuntu) | Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban |
+
 ### 🧰 Toolbox
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
@@ -33,10 +40,7 @@
 ### 📊 GitHub stats
 
 <p align="center">
-<table><tr>
-<td><a href="https://github.com/neohiro"><img src="stats.svg" alt="GitHub stats" height="160" /></a></td>
-<td><a href="https://github.com/neohiro"><img src="langs.svg" alt="Top languages" height="160" /></a></td>
-</tr></table>
+  <a href="https://neohiro.github.io"><img src="stats.svg" alt="GitHub stats and top languages" width="100%" /></a>
 </p>
 
 ---
