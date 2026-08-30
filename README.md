@@ -46,4 +46,9 @@
 
 🌐 **[frenzypenguin.media](https://linktr.ee/frenzypenguin.media)** · **[neohiro.github.io](https://neohiro.github.io)** · **[transhumanists](https://transhumanists.github.io)**
 
+<div align="center">
+  <a href="http://www.freevisitorcounters.com">Free Counter</a>
+  <script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1631162/t/1"></script>
+</div>
+
 💖 **[Sponsor](https://github.com/sponsors/neohiro)** — cover LLM API + hosting costs
