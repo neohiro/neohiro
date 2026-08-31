@@ -1,0 +1,25 @@
+{
+  "name": "auto-resume",
+  "version": "1.14.0",
+  "description": "Resilience + unattended-autonomy plugin for OpenCode. Recovery, model rotation, permission autopilot, task driver, and finalization mode.",
+  "main": "auto-resume.js",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/smoke.mjs",
+    "test:all": "node tests/smoke.mjs && node tests/extended.mjs && node tests/v2.mjs && node tests/v3.mjs && node tests/v4.mjs && node tests/stop.mjs && node tests/title.mjs && node tests/osnotify.mjs && node tests/stress.mjs && node tests/finalize.mjs",
+    "test:finalize": "node tests/finalize.mjs"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "resilience",
+    "auto-resume",
+    "autopilot",
+    "finalization"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neohiro/auto-resume"
+  }
+}
