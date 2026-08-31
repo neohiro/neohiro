@@ -44,7 +44,7 @@
 
 ### 🔗 Links
 
-🌐 **[frenzypenguin.media](https://linktr.ee/frenzypenguin.media)** · **[neohiro.github.io](https://neohiro.github.io)** · **[transhumanists](https://transhumanists.github.io)**
+🌐 **[frenzypenguin.media](https://linktr.ee/frenzypenguin.media)** · **[neohiro.github.io](https://neohiro.github.io)** · **[transhumanists](https://transhumanists.github.io)** · **[openstageisland](https://openstageisland.github.io)**
 
 <div align="center">
   <script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1631162/t/1" defer></script>
