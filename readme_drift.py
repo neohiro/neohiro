@@ -21,6 +21,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from collections import Counter
 from contextlib import suppress
 from pathlib import Path
 
@@ -55,6 +56,30 @@ _VALID_BRANCH = re.compile(
 )
 
 
+class _PreservingAuthRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Copy the original request's headers (including Authorization) onto
+    redirect targets.
+
+    Default HTTPRedirectHandler builds a fresh Request with only the URL;
+    the GH_TOKEN Bearer header would be dropped on a 3xx to
+    objects.githubusercontent.com, causing auth-required requests to fail
+    silently as "offline".
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        m = req.get_method()
+        if not (code in (301, 302, 303, 307, 308) and m in ("GET", "HEAD")):
+            raise urllib.error.HTTPError(req.full_url, code, msg, headers, fp)
+        new_headers = dict(req.header_items())
+        new_headers.pop("Host", None)  # urllib will set this from newurl
+        return urllib.request.Request(
+            newurl, headers=new_headers, method=m,
+            unverifiable=True,
+        )
+
+
+_GH_OPENER = urllib.request.build_opener(_PreservingAuthRedirectHandler())
+
+
 def _fetch_raw(owner_repo: str, path: str, branch: str,
                timeout: float = 15.0) -> bytes | None:
     """Fetch raw bytes from raw.githubusercontent.com.
@@ -72,7 +97,7 @@ def _fetch_raw(owner_repo: str, path: str, branch: str,
         headers["Authorization"] = f"Bearer {token}"
     try:
         req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with _GH_OPENER.open(req, timeout=timeout) as r:
             return r.read()
     except (urllib.error.URLError, TimeoutError, OSError):
         return None
@@ -181,9 +206,10 @@ def main() -> int:
 
     workspace = Path(args.workspace) if args.workspace else Path.cwd()
     findings = run(workspace, branch=args.branch, timeout=args.timeout)
-    drift_count = sum(1 for f in findings if f.get("status") == "drift")
-    error_count = sum(1 for f in findings if f.get("status") == "error")
-    offline_count = sum(1 for f in findings if f.get("status") == "offline")
+    counts = Counter(f.get("status") for f in findings)
+    drift_count = counts.get("drift", 0)
+    error_count = counts.get("error", 0)
+    offline_count = counts.get("offline", 0)
 
     if args.json:
         print(json.dumps({
