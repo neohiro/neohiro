@@ -68,6 +68,19 @@ def _iter_text_files(workspace: Path, roots: list[str]) -> list[Path]:
     out: list[Path] = []
     seen: set[Path] = set()
     resolved_workspace = workspace.resolve()
+
+    # Normalise to forward-slash for separator-safe prefix checks; Windows uses
+    # backslashes in resolved paths.
+    def _norm(p: Path) -> str:
+        return str(p.resolve()).replace("\\", "/")
+
+    ws_norm = _norm(resolved_workspace)
+
+    def _is_inside_workspace(candidate: Path) -> bool:
+        """True if candidate is the workspace itself or a descendant."""
+        c_norm = _norm(candidate)
+        return c_norm == ws_norm or c_norm.startswith(ws_norm + "/")
+
     for root in roots:
         rp = workspace / root
         if not rp.exists():
@@ -76,8 +89,8 @@ def _iter_text_files(workspace: Path, roots: list[str]) -> list[Path]:
             resolved_root = rp.resolve()
         except OSError:
             continue
-        if not str(resolved_root).startswith(str(resolved_workspace)):
-            continue  # symlink escaped workspace; skip
+        if not _is_inside_workspace(resolved_root):
+            continue  # outside workspace (includes symlink-escape paths)
         for p in rp.rglob("*"):
             if not p.is_file():
                 continue
@@ -139,6 +152,11 @@ def run(workspace: Path, roots: list[str], fix: bool = False) -> list[dict]:
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(errors="replace")
+        except (AttributeError, OSError):
+            pass
     parser = argparse.ArgumentParser(
         prog="check-eol",
         description="Enforce LF line endings on text files",
