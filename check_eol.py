@@ -49,6 +49,8 @@ EXCLUDE_DIR_NAMES = {
     ".git", "node_modules", "__pycache__", ".venv", "venv", "env",
     "dist", "build", ".next", "target", ".pytest_cache", ".ruff_cache",
     "vendor", "third_party", "thirdparty",
+    ".tox", ".nox", ".mypy_cache", ".pyright_cache", ".eggs",
+    "htmlcov", ".coverage", "coverage", ".cache", ".idea", ".vscode",
 }
 
 
