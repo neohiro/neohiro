@@ -7,8 +7,10 @@ never pushed, or the local is a stale shadow of an org repo.
 
 Usage:
     python neohiro/readme_drift.py           # human output, exit 1 on drift
-    python neohiro/readme_drift.py --json    # machine output
-    python neohiro/readme_drift.py --strict  # exit 2 on any warnings (e.g. offline)
+    python neohiro/readme_drift.py --json   # JSON output (for CI pipelines)
+    python neohiro/readme_drift.py --strict  # exit 2 on offline (warn in CI)
+    python neohiro/readme_drift.py --quiet  # no output; exit code only (CI)
+    GH_TOKEN=gho_... python neohiro/readme_drift.py  # authenticated (5k/hr)
 """
 from __future__ import annotations
 
@@ -41,18 +43,39 @@ SURFACES: list[tuple[str, str, str, str]] = [
 GH_RAW = "https://raw.githubusercontent.com/{owner_repo}/{branch}/{path}"
 
 # Git refname rules: https://git-scm.com/docs/git-check-ref-format
-# - No ASCII control chars, no space, no ~, ^, :, ?, *, [, \, .. as a path component
-# - Cannot begin with -, cannot contain @{, cannot end with .lock, cannot be @{ alone
 _VALID_BRANCH = re.compile(
     r"^(?!-)"          # cannot begin with - (would look like a flag)
     r"(?!.*\.\.)"      # cannot contain ..
-    r"(?!.*//)"       # cannot contain //
-    r"(?!.*@\{)"      # cannot contain @{
+    r"(?!.*//)"        # cannot contain //
+    r"(?!.*@\{)"       # cannot contain @{
     r"(?!.*[\\ ])"     # cannot contain backslash or space
     r"[A-Za-z0-9._/-]+"
     r"(?<!/)$"         # cannot end with /
-    r"(?<!\.lock)$"   # cannot end with .lock (git ref rule)
-)  # git refname component rules: https://git-scm.com/docs/git-check-ref-format
+    r"(?<!\.lock)$"    # cannot end with .lock (git ref rule)
+)
+
+
+def _fetch_raw(owner_repo: str, path: str, branch: str,
+               timeout: float = 15.0) -> bytes | None:
+    """Fetch raw bytes from raw.githubusercontent.com.
+
+    Returns None on any network/4xx/5xx error; callers should treat None
+    as a warning, not a failure (offline doctor must not become a hard fail).
+
+    If GH_TOKEN is set in the environment, the request is authenticated,
+    raising the rate-limit from 60 to 5,000 req/hour per IP.
+    """
+    url = GH_RAW.format(owner_repo=owner_repo, branch=branch, path=path)
+    headers: dict[str, str] = {}
+    token = os.environ.get("GH_TOKEN", "")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.read()
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return None
 
 
 def _validate_branch(branch: str) -> None:
@@ -68,21 +91,6 @@ def _validate_branch(branch: str) -> None:
             "(expected: non-empty, no '..' or '//', no '@{', no leading '-', "
             "no trailing '/', no '.lock' suffix)"
         )
-
-
-def _fetch_raw(owner_repo: str, path: str, branch: str,
-               timeout: float = 15.0) -> bytes | None:
-    """Fetch raw bytes from raw.githubusercontent.com.
-
-    Returns None on any network/4xx/5xx error; callers should treat None
-    as a warning, not a failure (offline doctor must not become a hard fail).
-    """
-    url = GH_RAW.format(owner_repo=owner_repo, branch=branch, path=path)
-    try:
-        with urllib.request.urlopen(url, timeout=timeout) as r:
-            return r.read()
-    except (urllib.error.URLError, TimeoutError, OSError):
-        return None
 
 
 def _check_surface(workspace: Path, rel: str, upstream_path: str,
@@ -161,6 +169,8 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON output")
     parser.add_argument("--strict", action="store_true",
                         help="exit 2 on offline warnings (default: exit 0)")
+    parser.add_argument("--quiet", action="store_true",
+                        help="suppress output; exit code only (for CI)")
     parser.add_argument("--timeout", type=float, default=15.0,
                         help="network timeout in seconds (default 15)")
     args = parser.parse_args()
@@ -184,7 +194,7 @@ def main() -> int:
             "branch": args.branch,
             "findings": findings,
         }, indent=2))
-    else:
+    elif not args.quiet:
         print(_format_text(findings, branch=args.branch))
 
     if drift_count or error_count:

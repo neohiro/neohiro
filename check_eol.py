@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 from contextlib import suppress
 from pathlib import Path
 
@@ -124,14 +125,29 @@ def _scan_file(path: Path) -> dict | None:
 
 
 def _fix_file(path: Path) -> bool:
-    """Rewrite CRLF → LF. Returns True if file was modified."""
+    """Rewrite CRLF → LF atomically. Returns True if file was modified.
+
+    Uses a NamedTemporaryFile + os.replace() so the original is never partially
+    written: replace() is atomic on POSIX and committed-on-close on Windows.
+    """
     try:
         data = path.read_bytes()
     except OSError:
         return False
     if b"\r\n" not in data:
         return False
-    path.write_bytes(data.replace(b"\r\n", b"\n"))
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb", suffix=path.name, dir=path.parent, delete=False,
+        ) as tmp:
+            tmp.write(data.replace(b"\r\n", b"\n"))
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+        return True
+    except OSError:
+        with suppress(NameError):
+            os.remove(tmp_name)
+        return False
     return True
 
 
