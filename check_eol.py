@@ -148,7 +148,6 @@ def _fix_file(path: Path) -> bool:
         with suppress(NameError):
             os.remove(tmp_name)
         return False
-    return True
 
 
 def run(workspace: Path, roots: list[str], fix: bool = False) -> list[dict]:
