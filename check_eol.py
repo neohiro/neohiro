@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+from contextlib import suppress
 from pathlib import Path
 
 # Text extensions that should always be LF. Binary is auto-detected by NUL byte.
@@ -152,11 +153,8 @@ def run(workspace: Path, roots: list[str], fix: bool = False) -> list[dict]:
 
 
 def main() -> int:
-    if hasattr(sys.stdout, "reconfigure"):
-        try:
-            sys.stdout.reconfigure(errors="replace")
-        except (AttributeError, OSError):
-            pass
+    with suppress(AttributeError, OSError):
+        sys.stdout.reconfigure(errors="replace")
     parser = argparse.ArgumentParser(
         prog="check-eol",
         description="Enforce LF line endings on text files",
