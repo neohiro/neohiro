@@ -46,7 +46,7 @@ jobs:
           # --quiet suppresses text output; --json prints structured data to stdout
           # which GitHub Actions appends to the step summary automatically.
           # Exit code 1 = drift found, 2 = offline+strict, 0 = clean.
-          python "${{ inputs.workspace }}/neohiro/readme_drift.py" \
+          python "${{ inputs.workspace }}/readme_drift.py" \
             --workspace "${{ inputs.workspace }}" \
             --branch "${{ inputs.branch }}" \
             --quiet \
