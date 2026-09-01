@@ -45,12 +45,12 @@
 
 ---
 
+<div align="center">
+  <a href="https://www.freevisitorcounters.com/en/home/stats/id/1631162" rel="noopener noreferrer nofollow no-referrer"><img src="https://www.freevisitorcounters.com/en/counter/render/1631162/t/1" alt="Visitor counter" /></a>
+</div>
+
 <p align="center">
   🌐 <b><a href="https://linktr.ee/frenzypenguin.media" rel="noopener noreferrer nofollow no-referrer">frenzypenguin.media</a></b><br/><br/>
   <a href="https://github.com/sponsors/neohiro" rel="noopener noreferrer nofollow no-referrer"><img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-%E2%9D%A4-EA4AAA?logo=githubsponsors&style=for-the-badge" alt="GitHub Sponsors"></a>&nbsp;&nbsp;
   <a href="https://www.patreon.com/frenzypenguin_media" rel="noopener noreferrer nofollow no-referrer"><img src="https://img.shields.io/badge/Patreon-frenzypenguin__media-F96854?logo=patreon&style=for-the-badge" alt="Support on Patreon"></a>
 </p>
-
-<div align="center">
-  <a href="https://www.freevisitorcounters.com/en/home/stats/id/1631162" rel="noopener noreferrer nofollow no-referrer"><img src="https://www.freevisitorcounters.com/en/counter/render/1631162/t/1" alt="Visitor counter" /></a>
-</div>
