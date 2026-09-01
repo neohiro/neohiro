@@ -1,0 +1,53 @@
+name: Readme Drift Check
+
+on:
+  workflow_call:
+    inputs:
+      workspace:
+        description: "Root directory of the workspace checkout"
+        required: false
+        type: string
+        default: "${{ github.workspace }}"
+      branch:
+        description: "Upstream branch to compare READMEs against"
+        required: false
+        type: string
+        default: "main"
+    secrets:
+      GH_TOKEN:
+        description: >
+          GitHub token for authenticated requests. Raises the unauthenticated
+          rate-limit from 60 to 5,000 req/hour per IP. Optional.
+        required: false
+
+jobs:
+  readme-drift:
+    name: README drift vs ${{ inputs.branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workspace
+        uses: actions/checkout@v4
+        with:
+          path: ${{ inputs.workspace }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Run readme drift check
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NEOHIRO_WORKSPACE: ${{ inputs.workspace }}
+        run: |
+          echo '## README Drift Check (`${{ inputs.branch }}`)' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          # --quiet suppresses text output; --json prints structured data to stdout
+          # which GitHub Actions appends to the step summary automatically.
+          # Exit code 1 = drift found, 2 = offline+strict, 0 = clean.
+          python "${{ inputs.workspace }}/neohiro/readme_drift.py" \
+            --workspace "${{ inputs.workspace }}" \
+            --branch "${{ inputs.branch }}" \
+            --quiet \
+            --json >> "$GITHUB_STEP_SUMMARY" 2>&1
