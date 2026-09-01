@@ -15,9 +15,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
+from contextlib import suppress
 from pathlib import Path
 
 # (local_relpath, upstream_path_on_default, expected_owner_repo, description)
@@ -37,6 +39,35 @@ SURFACES: list[tuple[str, str, str, str]] = [
 ]
 
 GH_RAW = "https://raw.githubusercontent.com/{owner_repo}/{branch}/{path}"
+
+# Git refname rules: https://git-scm.com/docs/git-check-ref-format
+# - No ASCII control chars, no space, no ~, ^, :, ?, *, [, \, .. as a path component
+# - Cannot begin with -, cannot contain @{, cannot end with .lock, cannot be @{ alone
+_VALID_BRANCH = re.compile(
+    r"^(?!-)"          # cannot begin with - (would look like a flag)
+    r"(?!.*\.\.)"      # cannot contain ..
+    r"(?!.*//)"       # cannot contain //
+    r"(?!.*@\{)"      # cannot contain @{
+    r"(?!.*[\\ ])"     # cannot contain backslash or space
+    r"[A-Za-z0-9._/-]+"
+    r"(?<!/)$"         # cannot end with /
+    r"(?<!\.lock)$"   # cannot end with .lock (git ref rule)
+)  # git refname component rules: https://git-scm.com/docs/git-check-ref-format
+
+
+def _validate_branch(branch: str) -> None:
+    """Raise ValueError if `branch` is not a valid Git refname component.
+
+    Defense in depth: prevents URL injection / path-traversal via --branch.
+    The server (GitHub) would 404 anyway, but rejecting locally gives a faster,
+    clearer error message and avoids surfacing weird URLs to any log/audit sink.
+    """
+    if not branch or not _VALID_BRANCH.match(branch):
+        raise ValueError(
+            f"invalid branch name: {branch!r} "
+            "(expected: non-empty, no '..' or '//', no '@{', no leading '-', "
+            "no trailing '/', no '.lock' suffix)"
+        )
 
 
 def _fetch_raw(owner_repo: str, path: str, branch: str,
@@ -63,24 +94,26 @@ def _check_surface(workspace: Path, rel: str, upstream_path: str,
         "surface": desc,
         "local": rel,
         "upstream": f"{owner_repo}/{branch}/{upstream_path}",
-        "ok": False,
+        "status": "error",
         "reason": "",
     }
     if not local_path.exists():
+        finding["status"] = "error"
         finding["reason"] = f"local file missing: {local_path}"
         return finding
     try:
         local_bytes = local_path.read_bytes()
     except OSError as e:
+        finding["status"] = "error"
         finding["reason"] = f"local read error: {e}"
         return finding
     remote = _fetch_raw(owner_repo, upstream_path, branch, timeout=timeout)
     if remote is None:
-        finding["ok"] = True  # offline → not a failure, just unverifiable
+        finding["status"] = "offline"
         finding["reason"] = "offline or upstream unreachable; skipped"
         return finding
     if local_bytes == remote:
-        finding["ok"] = True
+        finding["status"] = "ok"
         finding["reason"] = f"byte-identical to {branch}"
         return finding
     # Report diff size + first byte offset to aid debugging without dumping content
@@ -89,6 +122,7 @@ def _check_surface(workspace: Path, rel: str, upstream_path: str,
         (i for i in range(min_len) if local_bytes[i] != remote[i]),
         min_len,
     )
+    finding["status"] = "drift"
     finding["reason"] = (
         f"drift: local {len(local_bytes)}B vs remote {len(remote)}B "
         f"(first diff @ byte {first_diff})"
@@ -105,19 +139,17 @@ def run(workspace: Path, branch: str = "main", timeout: float = 15.0) -> list[di
 
 
 def _format_text(findings: list[dict], branch: str = "main") -> str:
+    markers = {"ok": "OK  ", "offline": "SKIP", "drift": "DRIFT", "error": "ERR "}
     lines = [f"neohiro readme-drift (default={branch}):"]
     for f in findings:
-        marker = "OK  " if f["ok"] else "DRIFT"
+        marker = markers.get(f.get("status", "error"), "????")
         lines.append(f"  [{marker}] {f['surface']}: {f['reason']}")
     return "\n".join(lines)
 
 
 def main() -> int:
-    if hasattr(sys.stdout, "reconfigure"):
-        try:
-            sys.stdout.reconfigure(errors="replace")
-        except (AttributeError, OSError):
-            pass
+    with suppress(AttributeError, OSError):
+        sys.stdout.reconfigure(errors="replace")
     parser = argparse.ArgumentParser(
         prog="readme-drift",
         description="Verify canonical READMEs match upstream default branch byte-for-byte",
@@ -132,16 +164,22 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=15.0,
                         help="network timeout in seconds (default 15)")
     args = parser.parse_args()
+    try:
+        _validate_branch(args.branch)
+    except ValueError as e:
+        parser.error(str(e))
 
     workspace = Path(args.workspace) if args.workspace else Path.cwd()
     findings = run(workspace, branch=args.branch, timeout=args.timeout)
-    drift_count = sum(1 for f in findings if not f["ok"])
-    offline_count = sum(1 for f in findings if "offline" in f["reason"])
+    drift_count = sum(1 for f in findings if f.get("status") == "drift")
+    error_count = sum(1 for f in findings if f.get("status") == "error")
+    offline_count = sum(1 for f in findings if f.get("status") == "offline")
 
     if args.json:
         print(json.dumps({
-            "ok": drift_count == 0,
+            "ok": drift_count == 0 and error_count == 0,
             "drift": drift_count,
+            "error": error_count,
             "offline": offline_count,
             "branch": args.branch,
             "findings": findings,
@@ -149,7 +187,7 @@ def main() -> int:
     else:
         print(_format_text(findings, branch=args.branch))
 
-    if drift_count:
+    if drift_count or error_count:
         return 1
     if args.strict and offline_count:
         return 2
