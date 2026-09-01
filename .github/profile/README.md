@@ -8,7 +8,7 @@
 
 | [neohiro](https://neohiro.github.io) | [frenzypenguin](https://frenzypenguin.media) | [openstageisland](https://openstageisland.github.io) | [transhumanists](https://transhumanists.github.io) |
 |:---:|:---:|:---:|:---:|
-| ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Fneohiro.github.io) | ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Ffrenzypenguin-media.github.io) | ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Fopenstageisland.github.io) | ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Ftranshumanists.github.io) |
+| ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Fneohiro.github.io) | ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Ffrenzypenguin.media) | ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Fopenstageisland.github.io) | ![status](https://img.shields.io/website?down_message=down&up_message=up&url=https%3A%2F%2Ftranshumanists.github.io) |
 
 ---
 
