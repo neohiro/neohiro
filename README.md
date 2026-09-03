@@ -19,6 +19,7 @@
 | [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · permission autopilot |
 | [![LANScan](https://img.shields.io/github/stars/neohiro/LANScan?style=flat&label=%E2%AD%90%20LANScan)](https://github.com/neohiro/LANScan) | ARP / ICMP passive & active network scanner |
 | [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks |
+| [![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=%E2%AD%90%20meteo-ics)](https://github.com/neohiro/meteo-ics) | Cross-platform .ics/WebCal weather Â· air quality Â· astronomy feed |
 | [![SystemMonitor](https://img.shields.io/github/stars/neohiro/SystemMonitor?style=flat&label=%E2%AD%90%20SystemMonitor)](https://github.com/neohiro/SystemMonitor) | Cross-platform system health monitor |
 
 ### 🔐 Hardening guides
