@@ -26,7 +26,7 @@
 | Guide | Description |
 | --- | --- |
 | 🪟 [windows](https://github.com/neohiro/windows) | STIG-style manual + automated Windows 10/11 new-install hardening checklist |
-| 🐧 [ubuntu](https://github.com/neohiro/ubuntu) | Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban |
+| 🐧 [linux](https://github.com/neohiro/linux) | Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban |
 
 ### 🧰 Toolbox
 
