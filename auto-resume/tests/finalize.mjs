@@ -11,11 +11,15 @@ import assert from "node:assert"
 // Anchored with word boundaries where possible; some short forms (end this,
 // terminate this) are matched as bare leading words.
 const FINALIZE_RE = new RegExp([
-  // finalize family — present tense (NOT past: "finalized")
-  "\\bfinalize[sd]?\\b(?!\\s+a\\s+complex)",  // exclude "finalize a complex X"
-  "\\bfinalise[sd]?\\b(?!\\s+a\\s+complex)",
-  "\\bfinalization\\b",
-  "\\bfinalisation\\b",
+  // finalize family — present tense only (NOT "finalized" past tense)
+  // finalize family — present tense only. "finalize" and "finalize this" are commands;
+  // "finalization mode" is a noun-phrase command; "to be finalized" is a description.
+  // Apostrophe and `s` are word chars in JS regex, so use [start|punct|whitespace] prefix.
+  "(?:^|[\\s.!?])(?:let's |lets |let us )?finalize(?:\\s|$|[.!?])",
+  "(?:^|[\\s.!?])(?:let's |lets |let us )?finalise(?:\\s|$|[.!?])",
+  "\\bfinalization\\b", "\\bfinalisation\\b",
+  // "to be finalized" / "to be finalized later" = NOT a finalization command
+  // (handled by negative lookahead in looksLikeFinalization, not here)
   // end/terminate/kill the session/task/this
   "\\b(?:end|terminate|kill)\\b[^.!?]{0,30}\\b(?:the\\s+)?(?:session|task|this)\\b",
   // finish up/this/it/off
@@ -27,10 +31,12 @@ const FINALIZE_RE = new RegExp([
   // that's all / that's it / that's a wrap / session over
   "\\b(?:that'?s?|that\\s+is)\\s+(?:all|it|a\\s+wrap)\\b",
   "\\bsession\\s+over\\b",
-  // we're done / i am done / done for today/now
-  "\\bwe[''`]\\s*(?:are|re)\\s*done\\b",
-  "\\bwe[''`]\\s*re\\s*finished\\b",
-  "\\bi[''`]\\s*(?:am|m)\\s*done\\b",
+  // we're done / we are done — the apostrophe is a word character in JS regex,
+  // so "we're" has NO space between we and re. Pattern handles both forms.
+  "\\bwe(?:\\s+(?:are|re|ll)|'(?:re|ll|m))\\s+(?:done|finished)\\b",
+  // i am done / i'm done
+  "\\bi(?:\\s+(?:am|m|ll)|'(?:m|ll))(?:\\s+(?:done|finished)\\b)",
+  // done for today/now
   "\\bdone\\s+for\\s+(?:today|now)\\b",
   // call it done / call it a day / call it complete
   "\\bcall\\s+it\\s+(?:done|a\\s+day|complete)\\b",
@@ -47,23 +53,46 @@ const looksLikeFinalization = (text) => {
   const t = String(text ?? "").trim()
   if (!t) return false
   if (t.length > 400) return false
-  return FINALIZE_RE.test(t)
+  // Negative-lookahead guard: "to be finalized" is a present-progressive
+  // description, NOT a finalization command.
+  if (/\bto\s+be\s+finali[sz]ed\b/i.test(t)) return false
+  if (!FINALIZE_RE.test(t)) return false
+  // After matching, check that the matched "finalize/ise" is not followed
+  // by a verb phrase that suggests description ("finalize a complex X").
+  // We treat these as finalization only if finalize is bare or ends the text.
+  const phrasalContext = /finali[sz]e\s+(?:the\s+)?(?:this|it|project|changes|task|session|work|everything|all|please)\b/i
+  const descriptiveContext = /finali[sz]e\s+(?:a|an|my|your|the)\s+\w+/i
+  if (descriptiveContext.test(t) && !phrasalContext.test(t)) return false
+  return true
 }
 
 const HANDSFREE_YES_RE_LIST = [
-  /^(yes|yep|yeah|ya|sure|ok|okay|k|kk|alright|go|proceed|do it|go ahead|y)\b[.!]?\s*$/i,
-  // "do it" BEFORE "please" — otherwise "yes, please do it" matches on "please" first
-  /^(yes|yep|yeah|sure|ok|okay|alright),?\s+(do it|go ahead|proceed|continue|please)\b[.!]?\s*$/i,
-  /^yes\s+please\b[.!]?\s*$/i,
-  /^(yes|yep|yeah|sure|ok|okay)\s+to\s+(your|the|all|that)\b(?!\s+but)/i,
-  /^continue(\s+and\s+(continue|finish|proceed))?\b[.!]?\s*$/i,
+  // Bare "do it" / "go ahead" etc. — single-word replies
+  /^(?:yes|yep|yeah|ya|sure|ok|okay|k|kk|alright|go|proceed|do it|go ahead|y)\b[.!]?\s*$/i,
+  // "yes, do it" / "yeah, go ahead" / "sure, proceed" — comma form
+  /^(?:yes|yep|yeah|sure|ok|okay|alright),?\s+(?:do it|go ahead|proceed|continue)\b[.!]?\s*$/i,
+  // "yes, please" (alone) — without trailing verb
+  /^(?:yes|yep|yeah|sure|ok|okay|alright),?\s+please\b[.!]?\s*$/i,
+  // "yes, please do it" / "yes, please proceed" — please + verb
+  /^(?:yes|yep|yeah|sure|ok|okay|alright),?\s+please\s+(?:do it|go ahead|proceed|continue)\b[.!]?\s*$/i,
+  // "yes to your proposal" / "yes to all" / "yes to that"
+  /^(?:yes|yep|yeah|sure|ok|okay)\s+to\s+(?:your|the|all|that)\b(?!\s+but)/i,
+  // "continue" / "continue and finish"
+  /^continue(?:\s+and\s+(?:continue|finish|proceed))?\b[.!]?\s*$/i,
+  // "handsfree" / "hands-free" / "hands free"
   /^hands\s*-?\s*free\b[.!]?\s*$/i,
+  // "auto-proceed" / "auto proceed"
   /^auto\s*-?\s*proceed\b[.!]?\s*$/i,
+  // "y to all"
   /^y\s+to\s+all\b[.!]?\s*$/i,
+  // "yes to all"
   /^yes\s+to\s+all\b[.!]?\s*$/i,
+  // "affirmative"
   /^affirmative\b[.!]?\s*$/i,
-  /^go\s+ahead\s+and\s+(do|update|fix|ship|merge|deploy)\b.*$/i,
-  /^(yes|yep|yeah|sure),?\s+(do|update|fix|ship|merge|deploy)\s+(it|them|all|everything)\b[.!]?\s*$/i,
+  // "go ahead and X"
+  /^go\s+ahead\s+and\s+(?:do|update|fix|ship|merge|deploy)\b.*$/i,
+  // "yes, do it" / "sure, fix it all" etc.
+  /^(?:yes|yep|yeah|sure),?\s+(?:do|update|fix|ship|merge|deploy)\s+(?:it|them|all|everything)\b[.!]?\s*$/i,
 ]
 const looksLikeHandsfreeYes = (text) => {
   const t = String(text ?? "").trim().toLowerCase()
