@@ -1,0 +1,47 @@
+# Line-ending discipline for the entire neohiro body.
+#
+# - All text files are checked out as LF on every platform.
+# - The neohiro/check_eol.py doctor rule enforces this in CI.
+# - A file marked binary is left alone regardless of its own bytes.
+#
+# To override per-file (e.g. a Windows-only .bat that genuinely needs CRLF),
+# add a per-path override further down.
+
+* text=auto eol=lf
+
+# Genuinely binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.bz2 binary
+*.xz binary
+*.7z binary
+*.rar binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.mp3 binary
+*.mp4 binary
+*.mov binary
+*.avi binary
+*.webm binary
+*.age binary
+*.key binary
+*.pem binary
+
+# Scripts that genuinely need CRLF (Windows-only line-noise)
+*.bat text eol=crlf
+*.cmd text eol=crlf

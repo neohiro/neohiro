@@ -1,0 +1,26 @@
+# Local shadow of the neohiro GitHub org
+#
+# This directory mirrors the public neohiro/neohiro org profile repo and
+# individual repos (ExploitProtection, dnscrypt-proxy-gui, Cripple-NetStrip,
+# auto-resume, windows, frenzypenguin-media) as a working copy. It is NOT
+# tracked by any git tree in this workspace.
+#
+# If you intend to make upstream changes, use the canonical GitHub workflow:
+#   gh repo clone neohiro/<repo>
+#   …edit…
+#   gh pr create
+#
+# If you need a local mirror for offline work, use:
+#   git clone https://github.com/neohiro/<repo> /shared/mirror/<repo>
+# (see network/scripts/bootstrap.sh for the shared drive convention)
+#
+# The doctor rules in neohiro-doctor check this directory for the same things
+# as the live workspace (line endings, drift vs master, structure). The CRLF
+# discipline in .gitattributes at this level applies to files in this shadow.
+
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.DS_Store
+Thumbs.db
