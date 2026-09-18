@@ -49,5 +49,7 @@ See the [heartbeats dashboard](https://neohiro.github.io/heartbeats/) for live s
 💖 **[Sponsor on GitHub](https://github.com/sponsors/neohiro)** — covers LLM API + hosting costs
 
 <div align="center">
-  <script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1631162/t/1" defer></script>
+  <a href="https://visitorbadge.io/status?path=github.com%2Fneohiro" rel="noopener noreferrer nofollow">
+    <img src="https://api.visitorbadge.io/api/visitors?path=github.com%2Fneohiro&label=Visitors&countColor=%23263759" alt="Visitors" />
+  </a>
 </div>
