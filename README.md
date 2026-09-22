@@ -2,12 +2,12 @@
 
 <p align="center">
   <b><i>"Defense is the best defense."</i></b> 🛡️<br/>
-  Open-source <b>security hardening</b> &amp; <b>privacy tools</b> for Windows &amp; Linux
+  Open-source <b>security hardening</b> & <b>privacy tools</b> for Windows & Linux
 </p>
 
 ### 🛡️ What I build
 
-🔒 Endpoint hardening &amp; debloating · 🌐 Encrypted DNS &amp; sinkholes · 🕸️ Honeypots &amp; traffic monitoring · 🧩 Practical Python utilities
+🔒 Endpoint hardening & debloating · 🌐 Encrypted DNS & sinkholes · 🕸️ Honeypots & traffic monitoring · 🧩 Practical Python utilities
 
 ### ⚔️ Featured projects
 
@@ -17,16 +17,14 @@
 | [![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=%E2%AD%90%20dnscrypt%20proxy%20GUI)](https://github.com/neohiro/dnscrypt-proxy-gui) | Cross-platform GUI for dnscrypt-proxy |
 | [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple%20NetStrip)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
 | [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · permission autopilot |
-| [![LANScan](https://img.shields.io/github/stars/neohiro/LANScan?style=flat&label=%E2%AD%90%20LANScan)](https://github.com/neohiro/LANScan) | ARP / ICMP passive & active network scanner |
 | [![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=%E2%AD%90%20meteo-ics)](https://github.com/neohiro/meteo-ics) | Cross-platform .ics/WebCal weather · air quality · astronomy feed |
-| [![SystemMonitor](https://img.shields.io/github/stars/neohiro/SystemMonitor?style=flat&label=%E2%AD%90%20SystemMonitor)](https://github.com/neohiro/SystemMonitor) | Cross-platform system health monitor |
 
 ### 🔐 Hardening guides
 
 | Guide | Description |
 | --- | --- |
-| 🪟 [windows](https://github.com/neohiro/windows) | STIG-style manual + automated Windows 10/11 new-install hardening checklist |
-| 🐧 [linux](https://github.com/neohiro/linux) | Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban |
+| [![windows](https://img.shields.io/github/stars/neohiro/windows?style=flat&label=%E2%AD%90%20windows)](https://github.com/neohiro/windows) | STIG-style manual + automated Windows 10/11 new-install hardening checklist |
+| [![linux](https://img.shields.io/github/stars/neohiro/linux?style=flat&label=%E2%AD%90%20linux)](https://github.com/neohiro/linux) | Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban |
 
 ### 🧰 Toolbox
 
