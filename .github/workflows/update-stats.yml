@@ -7,6 +7,13 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+
+# Two runs racing on the same automation branch would clobber each other's
+# push, and only one PR would ever get created.
+concurrency:
+  group: refresh-stats-card
+  cancel-in-progress: false
 
 jobs:
   refresh:
@@ -23,14 +30,45 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: python update_stats.py
 
-      - name: Commit refreshed card
+      # main is protected (GH006: changes must be made through a pull request),
+      # so a direct `git push` can never land the card. Publish to a dedicated
+      # branch instead and let a PR carry the change for review.
+      - name: Open or update refresh pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: automation/refresh-stats-card
+          # A schedule event fires on the default branch, but GITHUB_REF_NAME is
+          # only a reliable base for workflow_dispatch. Ask the API instead.
+          BASE: ${{ github.event.repository.default_branch }}
         run: |
+          set -euo pipefail
+          if git diff --quiet -- stats.svg; then
+            echo "stats.svg already up to date; nothing to do."
+            exit 0
+          fi
+
           git config user.name "stats-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add stats.svg
-          if git diff --cached --quiet; then
-            echo "No changes"
+          git commit -m "chore: refresh stat card"
+
+          # Plain --force, not --force-with-lease: checkout is depth-1, so there
+          # is no remote-tracking ref for $BRANCH and the lease form would fail
+          # with "stale info" on every run after the first. Safe because the
+          # branch is bot-owned and holds no work of its own.
+          git push --force origin "HEAD:refs/heads/$BRANCH"
+
+          # Reuse the open PR if a previous run left one behind, so a long
+          # review queue does not spawn a new PR every week.
+          number=$(gh pr list --head "$BRANCH" --state open --json number \
+            --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            echo "Updated existing PR #$number"
+            gh pr comment "$number" --body "Pushed a fresh card from run ${GITHUB_RUN_ID}."
           else
-            git commit -m "chore: refresh stat card"
-            git push
+            gh pr create \
+              --head "$BRANCH" \
+              --base "$BASE" \
+              --title "chore: refresh stat card" \
+              --body "Automated weekly regeneration of \`stats.svg\` from live GitHub data via \`update_stats.py\`."
           fi
