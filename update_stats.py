@@ -132,6 +132,10 @@ parts.append(f'<line x1="28" y1="68" x2="{W-28}" y2="68" stroke="{BORDER}" />')
 parts.append(f'<line x1="{MID}" y1="86" x2="{MID}" y2="{H-20}" stroke="{BORDER}" />')
 parts.append("</svg>")
 
-open("stats.svg", "w", encoding="utf-8").write("\n".join(parts))
+# newline="" + explicit "\n" keeps the card LF-only on Windows, where text mode
+# would otherwise translate every newline to CRLF. The repo's .gitattributes and
+# check_eol.py both require LF, and a CRLF SVG diffs noisily on every run.
+with open("stats.svg", "w", encoding="utf-8", newline="") as fh:
+    fh.write("\n".join(parts))
 print(f"stats.svg ({W}x{H}): stars={total_stars} followers={followers} repos={total_repos} contrib={contributions} agent_commits={agent_commits}")
 print(f"languages: {[(k, round(v/total_lb*100,1)) for k,v in top_langs]}")
