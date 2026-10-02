@@ -13,10 +13,10 @@
 <text x="476" y="198" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">47</text>
 <circle cx="34" cy="238" r="4" fill="#ff9e64"/>
 <text x="50" y="244" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">🔥 Contributions (last year)</text>
-<text x="476" y="244" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">4,010</text>
+<text x="476" y="244" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">2,117</text>
 <circle cx="34" cy="284" r="4" fill="#7dcfff"/>
 <text x="50" y="290" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">🤖 Agent-assisted commits</text>
-<text x="476" y="290" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">198</text>
+<text x="476" y="290" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">37</text>
 <text x="548" y="52" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="20" font-weight="700" fill="#bb9af7">Top Languages</text>
 <text x="550" y="110" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#e8eef2">Python</text>
 <text x="1032" y="110" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">57.5%</text>
