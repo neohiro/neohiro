@@ -41,6 +41,12 @@
   <a href="https://neohiro.github.io"><img src="stats.svg" alt="GitHub stats and top languages" width="100%" /></a>
 </p>
 
+### 🔗 Links
+
+- 🌐 [neohiro.github.io](https://neohiro.github.io)
+- 🔑 [meshcore-vanity-key](https://neohiro.github.io/meshcore-vanity-key)
+- 🧬 [transhumanists.github.io](https://transhumanists.github.io)
+
 ---
 
 <div align="center">
