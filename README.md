@@ -43,9 +43,9 @@
 
 ### 🔗 Links
 
-- 🌐 [neohiro.github.io](https://neohiro.github.io)
-- 🔑 [meshcore-meshtastic-vanity-key](https://neohiro.github.io/meshcore-meshtastic-vanity-key)
-- 🧬 [transhumanists.github.io](https://transhumanists.github.io)
+| 🌐 [neohiro.github.io](https://neohiro.github.io) | 🔑 [meshcore-meshtastic-vanity-key](https://neohiro.github.io/meshcore-meshtastic-vanity-key) | 🧬 [transhumanists.github.io](https://transhumanists.github.io) |
+| --- | --- | --- |
+| 🎬 [frenzypenguin-media.github.io](https://frenzypenguin-media.github.io) | 🏝️ [openstageisland.github.io](https://openstageisland.github.io) | 🔗 [linktr.ee/frenzypenguin.media](https://linktr.ee/frenzypenguin.media) |
 
 ---
 
