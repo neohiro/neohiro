@@ -44,7 +44,7 @@
 ### 🔗 Links
 
 - 🌐 [neohiro.github.io](https://neohiro.github.io)
-- 🔑 [meshcore-vanity-key](https://neohiro.github.io/meshcore-vanity-key)
+- 🔑 [meshcore-meshtastic-vanity-key](https://neohiro.github.io/meshcore-meshtastic-vanity-key)
 - 🧬 [transhumanists.github.io](https://transhumanists.github.io)
 
 ---
