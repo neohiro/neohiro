@@ -7,7 +7,7 @@
 
 ### 🛡️ What I build
 
-🔒 Endpoint hardening & debloating · 🌐 Encrypted DNS & sinkholes · 🕸️ Honeypots & traffic monitoring · 🧩 Practical Python utilities
+🔒 Endpoint hardening & debloating · 🌐 LoRa mesh applications · 🕸️ Honeypots & traffic monitoring · 🧩 Practical Python utilities
 
 ### ⚔️ Featured projects
 
