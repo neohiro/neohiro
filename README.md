@@ -18,6 +18,9 @@
 | [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple%20NetStrip)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
 | [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · permission autopilot |
 | [![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=%E2%AD%90%20meteo-ics)](https://github.com/neohiro/meteo-ics) | Cross-platform .ics/WebCal weather · air quality · astronomy feed |
+| [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks · detects scans, brute-force, IoT malware |
+| [![DNSLookup](https://img.shields.io/github/stars/neohiro/DNSLookup?style=flat&label=%E2%AD%90%20DNSLookup)](https://github.com/neohiro/DNSLookup) | IPv4 + IPv6 DNS lookup · records, reverse lookups, diagnostics |
+| [![lora-multiboot](https://img.shields.io/github/stars/neohiro/lora-multiboot?style=flat&label=%E2%AD%90%20lora-multiboot)](https://github.com/neohiro/lora-multiboot) | Role-aware multi-slot LoRa firmware · Meshtastic and MeshCore on one radio |
 
 ### 🔐 Hardening guides
 
@@ -43,11 +46,39 @@
 
 ### 🔗 Links
 
-<p align="center">
-| 🌐 [neohiro.github.io](https://neohiro.github.io) | 🔑 [mesh-vanity-key](https://neohiro.github.io/mesh-vanity-key) | 🧬 [transhumanists.github.io](https://transhumanists.github.io) |
-| --- | --- | --- |
-| 🎬 [frenzypenguin-media.github.io](https://frenzypenguin-media.github.io) | 🏝️ [openstageisland.github.io](https://openstageisland.github.io) | 🔗 [linktr.ee/frenzypenguin.media](https://linktr.ee/frenzypenguin.media) |
-</p>
+<!--
+  A pipe table cannot do this. GitHub sizes each column to its own widest cell,
+  so the three columns came out 30 / 26 / 29 characters wide and the grid read as
+  visibly lopsided. Padding the source cannot fix it either: markdown collapses
+  whitespace inside a cell before layout, so any padding added to equalise the
+  raw strings is thrown away before the browser ever sees it.
+
+  An HTML table with explicit percentages can, and it is also what makes the
+  rules between cells suppressible: `border: 0` plus `border-collapse: collapse`
+  means the separators are drawn as nothing rather than as a hairline in the
+  theme's border colour, which is what showed through behind the cells.
+
+  Left-aligned deliberately. Centring would fight the long link labels -- they
+  sit next to each other with ragged left edges, which reads worse than an
+  uneven grid. Keep it left.
+
+  The `width` percentages are what make the columns equal. Change one and the
+  other two have to change too, or the grid goes uneven again.
+-->
+<table style="border-collapse: collapse; border: none; width: 100%; max-width: 720px; text-align: left;">
+  <tbody>
+    <tr>
+      <td style="border: none; padding: 6px 12px 6px 0; width: 33.33%; vertical-align: top;">🌐 <a href="https://neohiro.github.io">neohiro.github.io</a></td>
+      <td style="border: none; padding: 6px 12px; width: 33.33%; vertical-align: top;">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
+      <td style="border: none; padding: 6px 0 6px 12px; width: 33.33%; vertical-align: top;">🧬 <a href="https://transhumanists.github.io">transhumanists.github.io</a></td>
+    </tr>
+    <tr>
+      <td style="border: none; padding: 6px 12px 6px 0; vertical-align: top;">🎬 <a href="https://frenzypenguin-media.github.io">frenzypenguin-media.github.io</a></td>
+      <td style="border: none; padding: 6px 12px; vertical-align: top;">🏝️ <a href="https://openstageisland.github.io">openstageisland.github.io</a></td>
+      <td style="border: none; padding: 6px 0 6px 12px; vertical-align: top;">🔗 <a href="https://linktr.ee/frenzypenguin.media">linktr.ee/frenzypenguin.media</a></td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 
