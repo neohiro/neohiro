@@ -5,7 +5,7 @@ combined into one SVG so they scale as a single unit on mobile.
 
 Output replaces the former two-card pair (stats.svg + langs.svg).
 """
-import json, subprocess
+import json, subprocess, sys
 from collections import defaultdict
 from urllib.parse import quote
 
@@ -17,6 +17,33 @@ def gh(endpoint):
         raise RuntimeError(f"{endpoint}: {r.stderr.decode()[:120]}")
     return json.loads(r.stdout.decode("utf-8"))
 
+def gh_paginate(endpoint):
+    """GET a list endpoint across all pages.
+
+    A bare `gh api` call returns only the first page. The REST API caps a page
+    at 100 items, so an account with more repos than that would be silently
+    truncated -- the totals would be wrong and nothing would say so.
+
+    --slurp makes gh emit one JSON array per page (a JSON array of arrays), so
+    this is a single json.loads with no guessing at page boundaries. Without
+    --slurp, separating pages means string-matching on "][", which silently
+    depends on gh's output formatting.
+    """
+    r = subprocess.run(["gh", "api", "--paginate", "--slurp", endpoint],
+                       capture_output=True)
+    if r.returncode != 0:
+        raise RuntimeError(f"{endpoint}: {r.stderr.decode()[:120]}")
+    pages = json.loads(r.stdout.decode("utf-8"))
+    # --slurp yields a list of pages, each itself a list. Flatten, but tolerate a
+    # non-list page so a future endpoint change fails loudly here rather than
+    # emitting a list of lists into the totals below.
+    items = []
+    for page in pages:
+        if not isinstance(page, list):
+            raise RuntimeError(f"{endpoint}: expected a list page, got {type(page).__name__}")
+        items.extend(page)
+    return items
+
 def gql(query):
     r = subprocess.run(["gh", "api", "graphql", "-f", f"query={query}"],
                        capture_output=True, text=True, encoding="utf-8")
@@ -27,7 +54,9 @@ def gql(query):
 user = gh(f"/users/{USER}")
 followers = user["followers"]
 
-repos = gh(f"/users/{USER}/repos?per_page=100&type=owner&sort=updated")
+# --paginate: without it the API caps at one page, so a past-100 account
+# would silently under-report stars and repo count on every run.
+repos = gh_paginate(f"/users/{USER}/repos?per_page=100&type=owner&sort=updated")
 repos = [r for r in repos if not r.get("fork")]
 total_stars = sum(r["stargazers_count"] for r in repos)
 total_repos = len(repos)
@@ -42,13 +71,21 @@ agent_q = quote(f"user:{USER} author-email:{AGENT_EMAIL}")
 agent_commits = gh(f"/search/commits?q={agent_q}")["total_count"]
 
 lang_bytes = defaultdict(int)
+# Count failures rather than swallowing them: a silent except here means an
+# expired token renders "No language data yet" with no indication of the cause.
+lang_failures = []
 for r in repos:
     try:
         langs = gh(f"/repos/{USER}/{r['name']}/languages")
         for k, v in langs.items():
             lang_bytes[k] += v
-    except Exception:
-        pass
+    except Exception as exc:
+        lang_failures.append(f"{r['name']}: {exc}")
+if lang_failures:
+    print(f"warning: languages unavailable for {len(lang_failures)}/{len(repos)} repos:",
+          file=sys.stderr)
+    for f in lang_failures[:5]:
+        print(f"  {f}", file=sys.stderr)
 
 LANG_COLORS = {
     "Python": "#3572A5", "Batchfile": "#C1F12E", "Shell": "#89e051",
