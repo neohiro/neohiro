@@ -24,6 +24,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          # No cache: pip. setup-python requires a requirements.txt or
+          # pyproject.toml to hash, and this repo has neither -- it has no
+          # third-party runtime dependencies, only pytest for the test run.
+          # Installing one wheel does not benefit from caching.
+
+      # pytest is not part of the Python distribution -- setup-python does not
+      # include it. Without this the run dies with "No module named pytest"
+      # before a single test executes.
+      - name: Install test dependencies
+        run: python -m pip install --disable-pip-version-check pytest
 
       # update_stats.py is the only thing that writes stats.svg, which renders
       # on the profile README, and it runs unattended on a schedule. These tests
@@ -34,10 +44,11 @@ jobs:
       # A syntax error or bad import in update_stats.py would otherwise only
       # surface in the scheduled run, days later.
       - name: Byte-compile the scripts
-        run: python -m py_compile update_stats.py check_eol.py readme_drift.py
+        run: python -m py_compile update_stats.py check_eol.py readme_drift.py test_update_stats.py
 
-      # check_eol.py guards the whole workspace against CRLF. stats.svg is
-      # rendered on the README, so a CRLF regression there is user-visible
-      # whitespace drift on every run.
+      # check_eol.py defaults to scanning sibling workspace directories, which do
+      # not exist in a bare repo checkout -- --root . scopes it to this repo.
+      # stats.svg is rendered on the README, so a CRLF regression there is
+      # user-visible whitespace drift on every run.
       - name: Enforce LF line endings
-        run: python check_eol.py
+        run: python check_eol.py --root .
