@@ -27,7 +27,10 @@ import unittest
 import unittest.mock as mock
 from pathlib import Path
 
-REPO = Path(r"C:\Users\skele\AppData\Local\Temp\opencode\clones\neohiro__neohiro")
+# Resolve relative to this file, not an absolute path. A hardcoded local clone
+# path made every test fail in CI with FileNotFoundError, because the checkout
+# lives somewhere else entirely on a runner.
+REPO = Path(__file__).resolve().parent
 SCRIPT = REPO / "update_stats.py"
 
 
