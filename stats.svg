@@ -10,38 +10,38 @@
 <text x="476" y="152" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">14</text>
 <circle cx="34" cy="192" r="4" fill="#9ece6a"/>
 <text x="50" y="198" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">📦 Public repositories</text>
-<text x="476" y="198" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">41</text>
+<text x="476" y="198" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">40</text>
 <circle cx="34" cy="238" r="4" fill="#ff9e64"/>
 <text x="50" y="244" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">🔥 Contributions (last year)</text>
-<text x="476" y="244" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">2,542</text>
+<text x="476" y="244" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">3,093</text>
 <circle cx="34" cy="284" r="4" fill="#7dcfff"/>
 <text x="50" y="290" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="15" fill="#8fa3b0">🤖 Agent-assisted commits</text>
-<text x="476" y="290" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">89</text>
+<text x="476" y="290" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="17" font-weight="700" fill="#e8eef2">282</text>
 <text x="548" y="52" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="20" font-weight="700" fill="#bb9af7">Top Languages</text>
 <text x="550" y="110" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#e8eef2">Python</text>
-<text x="1032" y="110" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">40.2%</text>
+<text x="1032" y="110" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">41.1%</text>
 <rect x="548" y="118" width="484" height="7" rx="3.5" fill="#22252f"/>
-<rect x="548" y="118" width="194.7" height="7" rx="3.5" fill="#3572A5"/>
+<rect x="548" y="118" width="198.7" height="7" rx="3.5" fill="#3572A5"/>
 <text x="550" y="144" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#e8eef2">JavaScript</text>
-<text x="1032" y="144" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">17.5%</text>
+<text x="1032" y="144" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">17.3%</text>
 <rect x="548" y="152" width="484" height="7" rx="3.5" fill="#22252f"/>
-<rect x="548" y="152" width="84.6" height="7" rx="3.5" fill="#f1e05a"/>
+<rect x="548" y="152" width="83.8" height="7" rx="3.5" fill="#f1e05a"/>
 <text x="550" y="178" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#e8eef2">C</text>
-<text x="1032" y="178" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">13.1%</text>
+<text x="1032" y="178" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">12.4%</text>
 <rect x="548" y="186" width="484" height="7" rx="3.5" fill="#22252f"/>
-<rect x="548" y="186" width="63.4" height="7" rx="3.5" fill="#8fa3b0"/>
+<rect x="548" y="186" width="60.0" height="7" rx="3.5" fill="#8fa3b0"/>
 <text x="550" y="212" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#e8eef2">C++</text>
-<text x="1032" y="212" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">10.8%</text>
+<text x="1032" y="212" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">10.2%</text>
 <rect x="548" y="220" width="484" height="7" rx="3.5" fill="#22252f"/>
-<rect x="548" y="220" width="52.3" height="7" rx="3.5" fill="#8fa3b0"/>
+<rect x="548" y="220" width="49.4" height="7" rx="3.5" fill="#8fa3b0"/>
 <text x="550" y="246" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#e8eef2">Shell</text>
-<text x="1032" y="246" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">8.3%</text>
+<text x="1032" y="246" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">8.2%</text>
 <rect x="548" y="254" width="484" height="7" rx="3.5" fill="#22252f"/>
-<rect x="548" y="254" width="40.2" height="7" rx="3.5" fill="#89e051"/>
+<rect x="548" y="254" width="39.5" height="7" rx="3.5" fill="#89e051"/>
 <text x="550" y="280" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#e8eef2">PowerShell</text>
-<text x="1032" y="280" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">3.6%</text>
+<text x="1032" y="280" text-anchor="end" font-family="Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="13.5" fill="#8fa3b0">3.4%</text>
 <rect x="548" y="288" width="484" height="7" rx="3.5" fill="#22252f"/>
-<rect x="548" y="288" width="17.5" height="7" rx="3.5" fill="#012456"/>
+<rect x="548" y="288" width="16.6" height="7" rx="3.5" fill="#012456"/>
 <line x1="28" y1="68" x2="1012" y2="68" stroke="#2a2e42" />
 <line x1="520" y1="86" x2="520" y2="330" stroke="#2a2e42" />
 </svg>
