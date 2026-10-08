@@ -66,17 +66,17 @@
   The `width` percentages are what make the columns equal. Change one and the
   other two have to change too, or the grid goes uneven again.
 -->
-<table style="border-collapse: collapse; border: none; width: 100%; max-width: 720px; text-align: left;">
+<table style="border-collapse: collapse; border: none; width: 100%; text-align: center;">
   <tbody>
     <tr>
-      <td style="border: none; padding: 6px 12px 6px 0; width: 33.33%; vertical-align: top;">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
-      <td style="border: none; padding: 6px 12px; width: 33.33%; vertical-align: top;">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
-      <td style="border: none; padding: 6px 0 6px 12px; width: 33.33%; vertical-align: top;">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
+      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
+      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
+      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
     </tr>
     <tr>
-      <td style="border: none; padding: 6px 12px 6px 0; vertical-align: top;">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
-      <td style="border: none; padding: 6px 12px; vertical-align: top;">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
-      <td style="border: none; padding: 6px 0 6px 12px; vertical-align: top;">🔗 <a href="https://domail.space">domail.space</a></td>
+      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
+      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
+      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🔗 <a href="https://domail.space">domail.space</a></td>
     </tr>
   </tbody>
 </table>
