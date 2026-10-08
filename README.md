@@ -13,6 +13,7 @@
 
 | Project | Description |
 | --- | --- |
+| [![domail](https://img.shields.io/github/stars/neohiro/domail?style=flat&label=%E2%AD%90%20domail)](https://github.com/neohiro/domail) | Local mail engine running entirely in your browser |
 | [![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=%E2%AD%90%20ExploitProtection)](https://github.com/neohiro/ExploitProtection) | Windows Exploit Protection settings (Ultimate) GUI |
 | [![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=%E2%AD%90%20dnscrypt%20proxy%20GUI)](https://github.com/neohiro/dnscrypt-proxy-gui) | Cross-platform GUI for dnscrypt-proxy |
 | [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple%20NetStrip)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
@@ -75,7 +76,7 @@
     <tr>
       <td style="border: none; padding: 6px 12px 6px 0; vertical-align: top;">🎬 <a href="https://frenzypenguin-media.github.io">frenzypenguin-media.github.io</a></td>
       <td style="border: none; padding: 6px 12px; vertical-align: top;">🏝️ <a href="https://openstageisland.github.io">openstageisland.github.io</a></td>
-      <td style="border: none; padding: 6px 0 6px 12px; vertical-align: top;">🔗 <a href="https://linktr.ee/frenzypenguin.media">linktr.ee/frenzypenguin.media</a></td>
+      <td style="border: none; padding: 6px 0 6px 12px; vertical-align: top;">🔗 <a href="https://domail.space">domail.space</a></td>
     </tr>
   </tbody>
 </table>
@@ -89,7 +90,7 @@
 </div>
 
 <p align="center">
-  🌐 <b><a href="https://linktr.ee/frenzypenguin.media" rel="noopener noreferrer nofollow">frenzypenguin.media</a></b><br/><br/>
+  🌐 <b><a href="https://domail.space" rel="noopener noreferrer nofollow">domail.space</a></b><br/><br/>
   <a href="https://github.com/sponsors/neohiro" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-%E2%9D%A4-EA4AAA?logo=githubsponsors&style=for-the-badge" alt="GitHub Sponsors"></a>&nbsp;&nbsp;
   <a href="https://www.patreon.com/frenzypenguin_media" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Patreon-frenzypenguin__media-F96854?logo=patreon&style=for-the-badge" alt="Support on Patreon"></a>
 </p>
