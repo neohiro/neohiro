@@ -69,13 +69,13 @@
 <table style="border-collapse: collapse; border: none; width: 100%; max-width: 720px; text-align: left;">
   <tbody>
     <tr>
-      <td style="border: none; padding: 6px 12px 6px 0; width: 33.33%; vertical-align: top;">🌐 <a href="https://neohiro.github.io">neohiro.github.io</a></td>
+      <td style="border: none; padding: 6px 12px 6px 0; width: 33.33%; vertical-align: top;">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
       <td style="border: none; padding: 6px 12px; width: 33.33%; vertical-align: top;">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
-      <td style="border: none; padding: 6px 0 6px 12px; width: 33.33%; vertical-align: top;">🧬 <a href="https://transhumanists.github.io">transhumanists.github.io</a></td>
+      <td style="border: none; padding: 6px 0 6px 12px; width: 33.33%; vertical-align: top;">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
     </tr>
     <tr>
-      <td style="border: none; padding: 6px 12px 6px 0; vertical-align: top;">🎬 <a href="https://frenzypenguin-media.github.io">frenzypenguin-media.github.io</a></td>
-      <td style="border: none; padding: 6px 12px; vertical-align: top;">🏝️ <a href="https://openstageisland.github.io">openstageisland.github.io</a></td>
+      <td style="border: none; padding: 6px 12px 6px 0; vertical-align: top;">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
+      <td style="border: none; padding: 6px 12px; vertical-align: top;">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
       <td style="border: none; padding: 6px 0 6px 12px; vertical-align: top;">🔗 <a href="https://domail.space">domail.space</a></td>
     </tr>
   </tbody>
