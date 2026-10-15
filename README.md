@@ -48,35 +48,22 @@
 ### 🔗 Links
 
 <!--
-  A pipe table cannot do this. GitHub sizes each column to its own widest cell,
-  so the three columns came out 30 / 26 / 29 characters wide and the grid read as
-  visibly lopsided. Padding the source cannot fix it either: markdown collapses
-  whitespace inside a cell before layout, so any padding added to equalise the
-  raw strings is thrown away before the browser ever sees it.
-
-  An HTML table with explicit percentages can, and it is also what makes the
-  rules between cells suppressible: `border: 0` plus `border-collapse: collapse`
-  means the separators are drawn as nothing rather than as a hairline in the
-  theme's border colour, which is what showed through behind the cells.
-
-  Left-aligned deliberately. Centring would fight the long link labels -- they
-  sit next to each other with ragged left edges, which reads worse than an
-  uneven grid. Keep it left.
-
-  The `width` percentages are what make the columns equal. Change one and the
-  other two have to change too, or the grid goes uneven again.
+  GitHub strips inline CSS from README HTML, so styling must use plain HTML
+  attributes here. `width="100%"` plus equal `width="33%"` columns keeps the
+  grid screen-wide and even. `align="center"` centers the labels, and
+  `border="0" cellpadding="8" cellspacing="0"` removes any visible raster.
 -->
-<table style="border-collapse: collapse; border: none; width: 100%; text-align: center;">
+<table width="100%" align="center" border="0" cellpadding="8" cellspacing="0">
   <tbody>
     <tr>
-      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
-      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
-      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
+      <td width="33%" align="center" valign="top">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
+      <td width="33%" align="center" valign="top">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
+      <td width="33%" align="center" valign="top">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
     </tr>
     <tr>
-      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
-      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
-      <td style="border: none; padding: 8px; width: 33.33%; text-align: center; vertical-align: top;">🔗 <a href="https://domail.space">domail.space</a></td>
+      <td width="33%" align="center" valign="top">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
+      <td width="33%" align="center" valign="top">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
+      <td width="33%" align="center" valign="top">🔗 <a href="https://domail.space">domail.space</a></td>
     </tr>
   </tbody>
 </table>
@@ -90,21 +77,7 @@
 </div>
 
 <p align="center">
-  <table width="100%">
-    <tr>
-      <td align="center">
-        🌐 <b><a href="https://neohiro.github.io" rel="noopener noreferrer nofollow">neohiro.github.io</a></b>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <a href="https://github.com/sponsors/neohiro" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-%E2%9D%A4-EA4AAA?logo=githubsponsors&style=for-the-badge" alt="GitHub Sponsors"></a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <a href="https://www.patreon.com/frenzypenguin_media" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Patreon-frenzypenguin__media-F96854?logo=patreon&style=for-the-badge" alt="Support on Patreon"></a>
-      </td>
-    </tr>
-  </table>
+  🌐 <b><a href="https://neohiro.github.io" rel="noopener noreferrer nofollow">neohiro.github.io</a></b><br/><br/>
+  <a href="https://github.com/sponsors/neohiro" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-%E2%9D%A4-EA4AAA?logo=githubsponsors&style=for-the-badge" alt="GitHub Sponsors"></a><br/><br/>
+  <a href="https://www.patreon.com/frenzypenguin_media" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Patreon-frenzypenguin__media-F96854?logo=patreon&style=for-the-badge" alt="Support on Patreon"></a>
 </p>
