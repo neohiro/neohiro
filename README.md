@@ -13,11 +13,10 @@
 
 | Project | Description |
 | --- | --- |
-| [![domail](https://img.shields.io/github/stars/neohiro/domail?style=flat&label=%E2%AD%90%20domail)](https://github.com/neohiro/domail) | Local mail engine running entirely in your browser |
 | [![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=%E2%AD%90%20ExploitProtection)](https://github.com/neohiro/ExploitProtection) | Windows Exploit Protection settings (Ultimate) GUI |
 | [![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=%E2%AD%90%20dnscrypt%20proxy%20GUI)](https://github.com/neohiro/dnscrypt-proxy-gui) | Cross-platform GUI for dnscrypt-proxy |
 | [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple%20NetStrip)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
-| [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · permission autopilot |
+| [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · autopilot |
 | [![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=%E2%AD%90%20meteo-ics)](https://github.com/neohiro/meteo-ics) | Cross-platform .ics/WebCal weather · air quality · astronomy feed |
 | [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks · detects scans, brute-force, IoT malware |
 | [![DNSLookup](https://img.shields.io/github/stars/neohiro/DNSLookup?style=flat&label=%E2%AD%90%20DNSLookup)](https://github.com/neohiro/DNSLookup) | IPv4 + IPv6 DNS lookup · records, reverse lookups, diagnostics |
