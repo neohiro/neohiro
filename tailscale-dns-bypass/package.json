@@ -1,0 +1,26 @@
+{
+  "name": "tailscale-dns-bypass",
+  "version": "1.0.0",
+  "description": "DNS-based bypass utility for Tailscale exit nodes to route blocked domains via local gateway",
+  "type": "module",
+  "private": true,
+  "main": "src/index.mjs",
+  "bin": {
+    "tsdb": "src/cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:watch": "node --watch --test test/*.test.mjs",
+    "lint": "eslint src/ test/ --ext .mjs",
+    "format": "prettier --write src/ test/ *.mjs *.json",
+    "verify": "npm test && npm run lint",
+    "cli": "node src/cli.mjs"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

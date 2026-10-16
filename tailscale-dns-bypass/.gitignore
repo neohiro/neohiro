@@ -1,0 +1,15 @@
+node_modules/
+npm-debug.log*
+
+# package-lock.json is intentionally COMMITTED so `npm ci` reproduces the exact
+# dependency tree on reinstall. Do not ignore it.
+
+# Local, machine-specific config: holds absolute hosts/backup paths.
+tsdb.config.json
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

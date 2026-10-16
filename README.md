@@ -7,7 +7,7 @@
 
 ### 🛡️ What I build
 
-🔒 Endpoint hardening & debloating · 🌐 LoRa mesh applications · 🕸️ Honeypots & traffic monitoring · 🧩 Practical Python utilities
+🔒 Endpoint hardening & debloating · 🌐 Encrypted DNS & sinkholes · 🕸️ Honeypots & traffic monitoring · 🧩 Practical Python utilities
 
 ### ⚔️ Featured projects
 
@@ -16,11 +16,8 @@
 | [![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=%E2%AD%90%20ExploitProtection)](https://github.com/neohiro/ExploitProtection) | Windows Exploit Protection settings (Ultimate) GUI |
 | [![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=%E2%AD%90%20dnscrypt%20proxy%20GUI)](https://github.com/neohiro/dnscrypt-proxy-gui) | Cross-platform GUI for dnscrypt-proxy |
 | [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple%20NetStrip)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
-| [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · autopilot |
+| [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · permission autopilot |
 | [![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=%E2%AD%90%20meteo-ics)](https://github.com/neohiro/meteo-ics) | Cross-platform .ics/WebCal weather · air quality · astronomy feed |
-| [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks · detects scans, brute-force, IoT malware |
-| [![DNSLookup](https://img.shields.io/github/stars/neohiro/DNSLookup?style=flat&label=%E2%AD%90%20DNSLookup)](https://github.com/neohiro/DNSLookup) | IPv4 + IPv6 DNS lookup · records, reverse lookups, diagnostics |
-| [![lora-multiboot](https://img.shields.io/github/stars/neohiro/lora-multiboot?style=flat&label=%E2%AD%90%20lora-multiboot)](https://github.com/neohiro/lora-multiboot) | Role-aware multi-slot LoRa firmware · Meshtastic and MeshCore on one radio |
 
 ### 🔐 Hardening guides
 
@@ -44,29 +41,6 @@
   <a href="https://neohiro.github.io"><img src="stats.svg" alt="GitHub stats and top languages" width="100%" /></a>
 </p>
 
-### 🔗 Links
-
-<!--
-  GitHub strips inline CSS from README HTML, so styling must use plain HTML
-  attributes here. `width="100%"` plus equal `width="33.33%"` columns keeps the
-  grid screen-wide and even. `align="center"` centers the labels, and
-  `border="0" cellpadding="8" cellspacing="0"` removes any visible raster.
--->
-<table width="100%" align="center" border="0" cellpadding="8" cellspacing="0">
-  <tbody>
-    <tr>
-      <td width="33.33%" align="center" valign="top">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
-      <td width="33.33%" align="center" valign="top">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
-      <td width="33.33%" align="center" valign="top">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
-    </tr>
-    <tr>
-      <td width="33.33%" align="center" valign="top">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
-      <td width="33.33%" align="center" valign="top">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
-      <td width="33.33%" align="center" valign="top">🔗 <a href="https://domail.space">domail.space</a></td>
-    </tr>
-  </tbody>
-</table>
-
 ---
 
 <div align="center">
@@ -75,8 +49,18 @@
   </a>
 </div>
 
-<p align="center">
-  🌐 <b><a href="https://neohiro.github.io" rel="noopener noreferrer nofollow">neohiro.github.io</a></b><br/><br/>
-  <a href="https://github.com/sponsors/neohiro" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-%E2%9D%A4-EA4AAA?logo=githubsponsors&style=for-the-badge" alt="GitHub Sponsors"></a><br/><br/>
-  <a href="https://www.patreon.com/frenzypenguin_media" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Patreon-frenzypenguin__media-F96854?logo=patreon&style=for-the-badge" alt="Support on Patreon"></a>
-</p>
+<div align="center">
+  <table width="100%">
+    <tr>
+      <td align="center" width="33.33%">
+        <a href="https://linktr.ee/frenzypenguin.media" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Links-frenzypenguin.media-2BE295?logo=linktree&logoColor=white&style=for-the-badge" alt="Linktree" width="100%" /></a>
+      </td>
+      <td align="center" width="33.33%">
+        <a href="https://github.com/sponsors/neohiro" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-%E2%9D%A4-EA4AAA?logo=githubsponsors&style=for-the-badge" alt="GitHub Sponsors" width="100%" /></a>
+      </td>
+      <td align="center" width="33.33%">
+        <a href="https://www.patreon.com/frenzypenguin_media" rel="noopener noreferrer nofollow"><img src="https://img.shields.io/badge/Patreon-frenzypenguin__media-F96854?logo=patreon&style=for-the-badge" alt="Support on Patreon" width="100%" /></a>
+      </td>
+    </tr>
+  </table>
+</div>

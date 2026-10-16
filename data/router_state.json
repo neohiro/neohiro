@@ -1,0 +1,10 @@
+{
+  "last_healthcheck": "never",
+  "healthy_providers": [],
+  "latency_p50": {},
+  "rate_budget_remaining": {},
+  "error_budget": {},
+  "total_requests": 2,
+  "free_requests_used": 0,
+  "paid_requests_used": 2
+}

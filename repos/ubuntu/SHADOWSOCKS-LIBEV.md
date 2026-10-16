@@ -1,0 +1,59 @@
+# ShadowSocks
+
+```bash
+sudo apt update && sudo apt upgrade
+```
+```bash
+sudo apt install shadowsocks-libev -y
+```
+```bash
+sudo nano /etc/shadowsocks-libev/config.json
+```
+for servers (or fill in same for client data with "local_address":127.0.0.1" uncommented):
+```json
+{
+    "server":["::0", "0.0.0.0"],
+    "mode":"tcp_and_udp",
+    "server_port":8888,
+    #"local_address":127.0.0.1",
+    "local_port":1080,
+    "password":"<CHANGE_ME>",
+    "timeout":300,
+    "method":"xchacha20-ietf-poly1305"
+    #"plugin": "obfs-server",
+    #"plugin_opts": "obfs=http"
+}
+```
+> **IMPORTANT:** Replace `<CHANGE_ME>` with a strong, randomly generated password.
+> Generate one with:
+> ```bash
+> openssl rand -base64 32
+> ```
+
+```bash
+sudo systemctl restart shadowsocks-libev.service
+```
+```bash
+systemctl status shadowsocks-libev.service
+```
+for servers:
+```bash
+sudo iptables -I INPUT -p tcp --dport 8888 -j ACCEPT
+sudo iptables -I INPUT -p udp --dport 8888 -j ACCEPT
+```
+```bash
+sudo apt-get install iptables-persistent
+```
+```bash
+sudo netfilter-persistent save
+```
+https://linuxconfig.org/how-to-make-iptables-rules-persistent-after-reboot-on-linux
+```bash
+sudo ufw allow 8888
+```
+Set up Shadowsocks client and optionally set up obfuscation (remove 2x '#' in json above):
+```bash
+sudo apt install simple-obfs
+```
+
+Or a docker install via [https://github.com/teddysun/shadowsocks_install/blob/master/docker/shadowsocks-libev/README.md]

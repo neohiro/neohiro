@@ -1,0 +1,17 @@
+Cripple-NetStrip|release.yml
+Cripple-NetStrip|ci.yml
+BlackGlass|release.yml
+ClockWidget|release.yml
+GhostMaze|release.yml
+GoogleCommand|release.yml
+LANScan|release.yml
+MoodTracker|release.yml
+MusicPlay|release.yml
+NetMatrix|release.yml
+NewsAgreggator|release.yml
+ShadowSocks|release.yml
+SystemMonitor|release.yml
+Tetris|release.yml
+TristarMania|release.yml
+ZombieShoot|release.yml
+dnscrypt-proxy-gui|release.yml

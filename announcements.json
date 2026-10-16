@@ -1,0 +1,18 @@
+{
+  "ExploitProtection": {
+    "body": "Welcome to **ExploitProtection** discussions!\n\n**Quick orientation**\n- 🐛 Found a bug? Open a **Bug report** issue instead (structured form above).\n- 🛡️ Vulnerability? Use **Report a vulnerability** on the Security tab — never a public issue.\n- 📄 Want to add/verify mitigation entries? See CONTRIBUTING.md — the catalog (XploitProtection.xml) is the heart of this project.\n- 💬 This forum is for questions, usage tips and hardening chat.\n\n**Latest builds**: Releases tab — Windows standalone, auto-built.\n\n— FrenzyPenguin Media 🛡️",
+    "title": "📌 Welcome — read this first"
+  },
+  "Cripple-NetStrip": {
+    "body": "Welcome to **NetStrip / Cripple** discussions!\n\n**Quick orientation**\n- 🐛 Bugs → **Bug report** issue with OS + version filled in.\n- 🔐 Security issues → Security tab, private report.\n- 🧭 Usage help (rules, blocklists, LAN Shield, Android VPN) → **Q&A** category here.\n- 🚀 Release notes live in the Releases tab; full changelog in changelog.md.\n\n**Ground rules**: no piracy talk; no attack traffic against systems you don't own.\n\n— FrenzyPenguin Media 🕸️",
+    "title": "📌 Welcome — read this first"
+  },
+  "BlackGlass": {
+    "body": "Welcome to **BlackGlass** discussions — the multi-client Second Life chat viewer!\n\n**Quick orientation**\n- 🐛 Viewer bugs → **Bug report** issue (include viewer version + grid).\n- 💬 Second Life chat/usage questions → **Q&A**.\n- 🗺️ Teleporting, minimap or Lists tab ideas → **Ideas**.\n- ⚠️ Reminder: comply with the Second Life ToS; use a test account when experimenting.\n\n**Downloads**: Releases tab — Windows/macOS/Linux, auto-built from tags.\n\n— FrenzyPenguin Media 👽",
+    "title": "📌 Welcome — read this first"
+  },
+  "dnscrypt-proxy-gui": {
+    "body": "Welcome to **dnscrypt-proxy GUI** discussions!\n\n**Quick orientation**\n- 🐛 GUI bugs → **Bug report** issue (OS + dnscrypt-proxy version please).\n- 🌐 Resolver recommendations and encrypted-DNS questions → **Q&A**.\n- 💡 Feature ideas (tray behavior, TOML editing UX…) → **Ideas**.\n- ⚙️ The GUI manages dnscrypt-proxy — proxy core bugs belong upstream.\n\n**Downloads**: Releases tab.\n\n— FrenzyPenguin Media 🛡️",
+    "title": "📌 Welcome — read this first"
+  }
+}

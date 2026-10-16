@@ -1,0 +1,231 @@
+# Windows Exploit Protection Settings
+[![Python 3.x](https://img.shields.io/badge/python-3.x-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgray.svg)](https://github.com/)
+[![Build Status](https://github.com/neohiro/ExploitProtection/actions/workflows/release.yml/badge.svg)](https://github.com/neohiro/ExploitProtection/actions)
+
+This repo contains ultimate security configurations against hacking such as memory space access, malware, credential theft - including some denial of service attacks + rootkit deployments: milsec for more than 100 Microsoft Windows programs. Following apps are protected (click categories to show list):
+
+<details>
+<summary> Web Browsers </summary>
+  
+- Google Chrome
+- Mozilla Firefox
+- Internet Explorer
+- Librewolf
+- Opera
+- Safari
+- Thorium
+- Edge
+- DuckDuckGo
+- Brave
+- Waterfox
+- Tor Browser
+</details>
+<details>
+<summary> Media Tools </summary>
+  
+- Audacity
+- butt audio streaming
+- Virtual DJ
+- Traktor
+- Photoshop
+- Groove Music
+- Winamp
+- foobar2000
+- iTunes
+- Windows Media Player
+- NDIRecord
+- StreamDeck
+- Yamaha Steinberg USB
+- vMix64
+- BlackMagic Video
+- VLC Media Player
+</details>
+<details>
+<summary> Communication Apps </summary>
+
+- Skype
+- Lync
+- Pidgin
+- Telegram
+- MS Outlook
+- Thunderbird
+- Windows Live Mail
+- Google Talk
+- Slack
+- Whatsapp
+- Wire
+- Armcord (a Discord client)
+- Discord
+- Zoom
+</details>
+<details>
+<summary> Gaming </summary>
+
+- Steam
+- Ubisoft
+- BlueStacks X
+- EA - Electronic Arts
+- GOG Galaxy (edit version number in .XML file accordingly)
+- EasyAntiCheat
+- The Sims 4
+- Cyberpunk 2077
+- Firestorm (for Second Life)
+- Radegast
+</details>
+<details>
+<summary> Networking </summary>
+
+- [dnscrypt-proxy](https://github.com/DNSCrypt/dnscrypt-proxy)
+- Tor
+- Torifier
+- DragonFruit Connect (OnionFruit)
+- WARP 1.1.1.1
+- OpenVPN
+- WireGuard
+- VPN Unlimited
+- Comodo Internet Security
+- YogaDNS
+</details>
+<details>
+<summary>  Common Software </summary>
+
+- Notepad++
+- Rainmeter
+- Obsidian
+- OneNote
+- Acrobat Reader PDF
+- Sumatra PDF
+- Foxit PDF Reader
+- Java
+- MS Access
+- MS Excel
+- MS PowerPoint
+- MS Word
+- MS Wordpad
+- MS Notepad
+- PowerShell
+- PowerShell ISE
+- Visio
+- WinZip
+- WinRAR
+- 7Z
+- ...
+</details>
+<details>
+<summary>  Microsoft Services </summary>
+  
+- Literally all (!) debloated Windows programs from boot. Beyond recommendations (took a few bluescreens >.<)
+- OneDrive
+- File Explorer
+- Smartscreen
+- Windows Settings
+- Task Manager
+- Windows Store
+- Command terminal
+- search index
+- SSH
+- svchost
+- smss
+- csrss
+- lpcapsvc
+- conhost
+- dashost
+- OOBEbroker
+- WMI
+- wininit
+- winlogon
+- WerFault
+- lsalso & lsass
+- and many more (everything on Windows 10 & 11)
+</details>
+<details>
+<summary> Other Executables </summary>
+
+- Adobe (services)
+- AMD (GPU driver)
+- Citrix Workspace App
+- Crash_handler
+- DuckyRGB
+- Edge Webview2 (works for Citrix Workspace, DuckDuckGo, Edge...)
+- Everything
+- Element
+- Garmin Express
+- Front
+- Faststone viewer
+- HP (drivers)
+- Intel (drivers)
+- irfanview64
+- Jellyfin
+- KeePassXC & proxy
+- Open SSL
+- NVIDIA
+- MPV
+- µTorrent
+- Qbittorrent
+- Qt Web Engine
+- Real Converter
+- RealPlay
+- Realtek Audio
+- SwitchDefaultDeny(x64)
+- SyncThing
+- Thunderbolt
+- ...
+</details>
+
+Check separate settings when specific features don't work as they are fully tested & all programs will start.
+> <sup> Windows Settings > Security & Privacy > Windows Security > App & browser control > Exploit protection settings > Program settings </sup>
+
+
+Help update [XploitProtection.xml](https://github.com/neohiro/ExploitProtection/blob/M3T4P0D.3XPL01T/XploitProtection.xml) and keep this repo growing with new entries. This list & extra security settings below are focused on Windows Home & Pro consumers, gamers & small businesses (including privacy geeks) where agility is everything. By using PoE (process of elimination) while applying WEPS and keeping the .xml file here up to date, together we keep the most complete list online.
+
+## Windows Exploit Protection Manager
+###
+The standalone GUI (you can also use Python to run [this script](https://github.com/neohiro/ExploitProtection/blob/M3T4P0D.3XPL01T/ExploitProtection.py)) brings dramatic improvements to the interface that Windows offers today - WEPS Manager excels in speed for bulk actions & repetitive implementations, running tighter security with no trouble: remove & import settings again whenever you need & be up to date in a few seconds. 
+
+## Automatic Updates
+Run the .exe file to change WEPS quickly. Update every so often (this will not remove any existing settings) & reboot to activate, also after manually importing with this command:
+
+`Set-ProcessMitigation -PolicyFilePath "$HOME\Downloads\XploitProtection.xml"`
+
+### Backup, Remove & Import
+Some installations require temporarily removing protection: reboot & install the software, run again or import your own local XML. After restart, these policies block intrusions like botnets, cache exploits and more!
+
+## Troubleshooting
+When you run a hardened version of Windows, Powershell ISE does not work and/or you have no direct internet connection, please use the .exe file in combination with an offline download of the .xml (via it's import function) which remains functional in most cases.
+
+![GUIscreenshot](media/XProtGUIscreenshot.png)
+
+Protect now!
+
+#
+ 
+### Security Upgrades
+  - Use encrypted DNS (f.e. 9.9.9.9, [dnslow.me](https://github.com/PeterDaveHello/dnslow.me),...) via Windows network settings or a third-party program
+  - [windows_hardening.cmd](https://gist.github.com/neohiro/da3dc76dcf77c67878f02fd71ac17358) (includes **mimikatz exploit** protection, debloater & more STIG security)
+  - https://github.com/AndyFul/Hard_Configurator (will further harden Windows beyond the extreme STIG standards)
+  - https://github.com/AndyFul/ConfigureDefender (interactive protection)
+  - Things not to forget during a [new Windows install](https://github.com/neohiro/windows)
+
+### Windows Tools
+  - https://github.com/Sycnex/Windows10Debloater (debloat Windows 10 & 11)
+  - https://www.thewindowsclub.com/ultimate-windows-tweaker-5-for-windows-11
+
+### Merged Repositories
+- https://github.com/jdgregson/Exploit-Protection-Settings as to support Microsoft Office
+- Added https://github.com/Strana-Mechty/ExploitProtection-Templates including Adobe, Telegram & more
+- Calibrated with original https://github.com/microsoft/ExploitProtectionConfiguration
+
+##
+ 
+⭐ Star & help others find better protection.
+
+---
+
+### 📄 License
+
+This project's code is released under a restrictive custom license — see [LICENSE](LICENSE) for details. The bundled mitigation database ([XploitProtection.xml](XploitProtection.xml)) aggregates community settings credited in *Merged Repositories* above.
+
+© [FrenzyPenguin Media](https://linktr.ee/frenzypenguin.media)
+
+![settingsimage](media/WindowsSettings.jpg)

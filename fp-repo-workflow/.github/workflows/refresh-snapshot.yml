@@ -1,0 +1,47 @@
+name: Refresh repos.json snapshot
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # weekly, Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-snapshot
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Regenerate snapshot
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./tools/update-snapshot.ps1 -NoDeploy -OutFile ./repos.json
+
+      - name: Commit snapshot if changed
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          . ./tools/gh-commit.ps1
+          $generated = [IO.File]::ReadAllText("./repos.json", [Text.Encoding]::UTF8)
+          $existing = ""
+          try {
+            $b64 = gh api "/repos/frenzypenguin-media/frenzypenguin-media.github.io/contents/repos.json" --jq ".content"
+            $existing = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b64))
+          } catch { Write-Host "no existing snapshot - will create" }
+          if ($generated.Trim() -eq $existing.Trim()) {
+            Write-Host "Snapshot unchanged - skipping commit"
+            exit 0
+          }
+          Commit-Files -Repo "frenzypenguin-media.github.io" -Owner "frenzypenguin-media" `
+            -Message "chore: weekly repos.json refresh" `
+            -Changes @(@{ path = "repos.json"; content = $generated })

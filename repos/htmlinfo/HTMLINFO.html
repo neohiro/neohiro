@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Variables</title>
+    <!-- Use the Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-2xl max-w-2xl w-full">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 text-center">Browser & System Variables</h1>
+        <p class="text-gray-600 mb-8 text-center">
+            This page displays various internal variables and information provided by your browser.
+        </p>
+
+        <div id="variables-container" class="space-y-4">
+            <!-- This section will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Function to check for localStorage availability
+        function isLocalStorageAvailable() {
+            try {
+                const test = '__storage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Use an array of objects to easily manage the variables to be displayed
+        // The requested variables have been moved to the top of the list.
+        const variables = [
+            // Group 1: Device Information
+            { label: 'Device Memory', value: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'N/A' },
+            { label: 'Connection Type', value: navigator.connection ? navigator.connection.effectiveType : 'N/A' },
+            { label: 'Platform', value: navigator.platform },
+            
+            // Group 2: Browser and Client Status
+            { label: 'Cookies Enabled', value: navigator.cookieEnabled ? 'Yes' : 'No' },
+            { label: 'Online Status', value: navigator.onLine ? 'Online' : 'Offline' },
+            { label: 'Web Storage Available', value: isLocalStorageAvailable() ? 'Yes' : 'No' },
+            { label: 'Java Enabled', value: navigator.javaEnabled() ? 'Yes' : 'No' },
+            
+            // Group 3: Date and Time
+            { label: 'Current Date & Time', value: new Date().toLocaleString() },
+            { label: 'Timezone Offset', value: `GMT ${new Date().getTimezoneOffset() / -60}` },
+            
+            // Group 4: Screen Information
+            { label: 'Screen Width', value: `${window.screen.width}px` },
+            { label: 'Screen Height', value: `${window.screen.height}px` },
+            { label: 'Total Screen Pixels', value: `${window.screen.width * window.screen.height}px` },
+            { label: 'Viewport Width', value: `${window.innerWidth}px` },
+            { label: 'Viewport Height', value: `${window.innerHeight}px` },
+            
+            // Group 5: Document and Browser Details
+            { label: 'User Agent', value: navigator.userAgent },
+            { label: 'Browser Language', value: navigator.language },
+            { label: 'History Length', value: history.length },
+            { label: 'Document URL', value: document.URL },
+            { label: 'Referrer URL', value: document.referrer || 'N/A' },
+        ];
+
+        // Get the container element where the variables will be rendered
+        const container = document.getElementById('variables-container');
+
+        // Loop through the variables and create a div for each one
+        variables.forEach(item => {
+            const variableDiv = document.createElement('div');
+            variableDiv.className = "bg-gray-100 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center";
+
+            // Create the label for the variable
+            const label = document.createElement('span');
+            label.className = "text-gray-800 font-medium mb-1 sm:mb-0";
+            label.textContent = item.label;
+
+            // Create the value display for the variable
+            const value = document.createElement('span');
+            value.className = "text-gray-600 font-mono text-sm break-all"; // `break-all` handles long URLs
+            value.textContent = item.value;
+
+            // Append the label and value to the container div
+            variableDiv.appendChild(label);
+            variableDiv.appendChild(value);
+            container.appendChild(variableDiv);
+        });
+    </script>
+</body>
+</html>

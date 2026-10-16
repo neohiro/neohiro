@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg">
+<title>HoneyScan — neohiro</title>
+<meta name="description" content="Passive honeypot for home networks — watch port scanners and snoopers in real time, beginner-friendly.">
+<meta name="theme-color" content="#04060a">
+<meta property="og:title" content="HoneyScan — neohiro">
+<meta property="og:description" content="Passive honeypot for home networks — watch port scanners and snoopers in real time, beginner-friendly.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://neohiro.github.io/HoneyScan.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="HoneyScan — neohiro">
+<meta name="twitter:description" content="Passive honeypot for home networks — watch port scanners and snoopers in real time, beginner-friendly.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<style>
+:root{
+  --bg:#04060a; --card:rgba(16,22,29,.85);
+  --cyan:#00e5ff; --violet:#7c4dff; --green:#66bb6a;
+  --text:#e8eef2; --muted:#8fa3b0; --line:rgba(0,229,255,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+.aurora{position:fixed;inset:-20%;z-index:-2;filter:blur(64px);opacity:.55;will-change:transform;
+  background:
+    radial-gradient(38vw 38vw at 18% 24%, rgba(124,77,255,.35), transparent 60%),
+    radial-gradient(32vw 32vw at 82% 18%, rgba(0,229,255,.28), transparent 60%),
+    radial-gradient(40vw 40vw at 70% 85%, rgba(102,187,106,.20), transparent 62%);
+  animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{50%{transform:translate3d(-4%,3%,0) scale(1.08)}100%{transform:translate3d(3%,-3%,0) scale(.96)}}
+.grid{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%)}
+.grid::before{content:"";position:absolute;inset:-112px;will-change:transform;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:56px 56px;
+  animation:gridpan 40s linear infinite}
+@keyframes gridpan{to{transform:translate3d(56px,112px,0)}}
+.wrap{width:100%;max-width:860px;margin:0 auto;padding:0 24px}
+.crumbs{padding-top:34px;font-size:13.5px}
+.crumbs a{color:var(--muted);text-decoration:none;border:1px solid var(--line);
+  padding:7px 14px;border-radius:999px;transition:.25s}
+.crumbs a:hover{color:var(--cyan);border-color:var(--cyan)}
+.head{text-align:center;padding:44px 0 10px}
+.kicker{display:inline-block;font-size:12px;letter-spacing:.35em;color:var(--cyan);
+  border:1px solid var(--line);padding:7px 16px;border-radius:999px;margin-bottom:22px;
+  animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 22px rgba(0,229,255,.25)}}
+h1{font-size:clamp(34px,6vw,58px);font-weight:800;letter-spacing:-.02em;line-height:1.08}
+.desc{margin-top:16px;color:var(--muted);font-size:clamp(15.5px,2.4vw,19px);line-height:1.65;max-width:640px;margin-left:auto;margin-right:auto}
+.tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}
+.tag{font-size:11px;padding:4px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:var(--muted)}
+.panel{margin:38px 0 26px;border-radius:18px;padding:30px 30px 26px;background:var(--card);
+  border:1px solid rgba(255,255,255,.06);
+  opacity:0;transform:translateY(26px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1)}
+.panel.in{opacity:1;transform:none}
+.panel h2{font-size:13px;letter-spacing:.35em;text-transform:uppercase;color:var(--cyan);
+  margin-bottom:18px;display:flex;align-items:center;gap:16px}
+.panel h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.panel ul{list-style:none}
+.panel li{color:var(--muted);font-size:15px;line-height:1.7;padding:7px 0 7px 26px;position:relative}
+.panel li::before{content:"";position:absolute;left:4px;top:16px;width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan),var(--violet))}
+.meta{margin-top:16px;font-size:13px;color:var(--muted)}
+.stars{color:#ffd54f;font-weight:600}
+.btnrow{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:999px;
+  font-weight:700;font-size:15px;text-decoration:none;letter-spacing:.02em;
+  transition:transform .25s,box-shadow .25s,border-color .25s}
+.btn:hover{transform:translateY(-3px)}
+.btn.gh{background:linear-gradient(135deg,var(--cyan),#0092b8);color:#03131a;
+  box-shadow:0 8px 28px rgba(0,229,255,.30)}
+.btn.ghost{border:1px solid var(--line);color:var(--muted)}
+.btn.ghost:hover{border-color:var(--violet);color:var(--text)}
+footer{margin-top:auto;padding:40px 0 52px;text-align:center;color:var(--muted);font-size:13.5px}
+footer .heart{color:#ea4aaa}
+footer a{color:var(--cyan);text-decoration:none}
+@media(max-width:640px){.panel{padding:24px 20px}.btnrow .btn{width:100%;justify-content:center}}
+@media(prefers-reduced-motion:reduce){
+  .aurora,.grid::before,.kicker{animation:none}
+  .panel{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+<div class="aurora"></div><div class="grid"></div>
+
+<main class="wrap">
+  <nav class="crumbs"><a href="./">&#8592; neohiro home</a></nav>
+
+  <header class="head">
+    <span class="kicker">FEATURED TOOL</span>
+    <h1>HoneyScan</h1>
+    <p class="desc">Passive honeypot for home networks — watch port scanners and snoopers in real time, beginner-friendly.</p>
+    <div class="tags"><span class="tag">Honeypot</span><span class="tag">IDS</span><span class="tag">Learning</span></div>
+  </header>
+
+  <section class="panel">
+    <h2>Highlights</h2>
+    <ul>
+      <li>Passive monitoring — no packets sent, nothing to trip over</li>
+      <li>Real-time view of port scanners and snoopers</li>
+      <li>Built to be a friendly first step into network defense</li>
+    </ul>
+    <p class="meta">Currently <span class="stars" data-repo="HoneyScan">★ 2</span> on GitHub (updates live).</p>
+    <div class="btnrow">
+      <a class="btn gh" href="https://github.com/neohiro/HoneyScan" data-repo="HoneyScan">View on GitHub &#8599;</a>
+      <a class="btn ghost" href="./">Back to all projects</a>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Part of <a href="./">neohiro.github.io</a> · Made with <span class="heart">&hearts;</span> by <a href="https://github.com/neohiro">neohiro</a></p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg">
+<title>neohiro — Security Hardening & Privacy Tools</title>
+<meta name="description" content="Defense is the best defense. Open-source security hardening and privacy tools for Windows & Linux by neohiro / METAPOD.">
+<meta name="theme-color" content="#04060a">
+<meta property="og:title" content="neohiro — Security Hardening & Privacy Tools">
+<meta property="og:description" content="Defense is the best defense. Open-source security hardening and privacy tools for Windows & Linux by neohiro / METAPOD.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://neohiro.github.io/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="neohiro — Security Hardening & Privacy Tools">
+<meta name="twitter:description" content="Defense is the best defense. Open-source security hardening and privacy tools for Windows & Linux by neohiro / METAPOD.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<style>
+:root{
+  --bg:#04060a; --bg2:#080d14; --card:rgba(16,22,29,.85);
+  --cyan:#00e5ff; --violet:#7c4dff; --green:#66bb6a;
+  --text:#e8eef2; --muted:#8fa3b0; --line:rgba(0,229,255,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  overflow-x:hidden; min-height:100vh;
+}
+/* ---- animated aurora background ---- */
+.aurora{position:fixed;inset:-20%;z-index:-2;filter:blur(64px);opacity:.55;will-change:transform;
+  background:
+    radial-gradient(38vw 38vw at 18% 24%, rgba(124,77,255,.35), transparent 60%),
+    radial-gradient(32vw 32vw at 82% 18%, rgba(0,229,255,.28), transparent 60%),
+    radial-gradient(40vw 40vw at 70% 85%, rgba(102,187,106,.20), transparent 62%);
+  animation:drift 26s ease-in-out infinite alternate;}
+@keyframes drift{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(-4%,3%,0) scale(1.08)}
+  100%{transform:translate3d(3%,-3%,0) scale(.96)}}
+.grid{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%)}
+.grid::before{content:"";position:absolute;inset:-112px;will-change:transform;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:56px 56px;
+  animation:gridpan 40s linear infinite;}
+@keyframes gridpan{to{transform:translate3d(56px,112px,0)}}
+/* ---- layout ---- */
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+header{padding:90px 0 40px;text-align:center}
+.kicker{display:inline-block;font-size:13px;letter-spacing:.35em;color:var(--cyan);
+  border:1px solid var(--line);padding:8px 18px;border-radius:999px;margin-bottom:28px;
+  animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 22px rgba(0,229,255,.25)}}
+h1.glitch{font-size:clamp(52px,9vw,108px);font-weight:800;letter-spacing:-.02em;line-height:1;
+  position:relative;display:inline-block}
+h1.glitch::before,h1.glitch::after{content:attr(data-t);position:absolute;inset:0}
+h1.glitch::before{color:var(--violet);animation:g1 2.6s steps(1) infinite;opacity:.75}
+h1.glitch::after{color:var(--cyan);animation:g2 3.3s steps(1) infinite;opacity:.75}
+h1.glitch.glitching{animation:hshake .18s steps(2) 2}
+@keyframes g1{
+  0%,14%{transform:none}
+  15%{transform:translate(-5px,2px);clip-path:inset(12% 0 58% 0)}
+  17%{transform:translate(4px,-1px);clip-path:inset(48% 0 22% 0)}
+  19%{transform:translate(-3px,1px);clip-path:inset(70% 0 4% 0)}
+  21%,44%{transform:none;clip-path:inset(12% 0 58% 0)}
+  45%{transform:translate(6px,-2px) skewX(4deg)}
+  47%{transform:translate(-4px,1px) skewX(-3deg)}
+  49%,74%{transform:none;clip-path:inset(30% 0 40% 0)}
+  75%{transform:translate(-5px,2px);clip-path:inset(5% 0 80% 0)}
+  77%{transform:translate(3px,-1px);clip-path:inset(55% 0 18% 0)}
+  79%,100%{transform:none;clip-path:inset(12% 0 58% 0)}}
+@keyframes g2{
+  0%,9%{transform:none}
+  10%{transform:translate(5px,-2px);clip-path:inset(62% 0 8% 0)}
+  13%{transform:translate(-4px,2px);clip-path:inset(20% 0 60% 0)}
+  16%{transform:translate(3px,1px);clip-path:inset(78% 0 2% 0)}
+  18%,39%{transform:none;clip-path:inset(62% 0 8% 0)}
+  40%{transform:translate(-6px,1px) skewX(-5deg)}
+  42%{transform:translate(4px,-2px) skewX(3deg)}
+  44%,69%{transform:none;clip-path:inset(40% 0 30% 0)}
+  70%{transform:translate(5px,-1px);clip-path:inset(10% 0 72% 0)}
+  73%{transform:translate(-3px,2px);clip-path:inset(66% 0 6% 0)}
+  76%,100%{transform:none;clip-path:inset(62% 0 8% 0)}}
+@keyframes hshake{
+  25%{transform:translate(-3px,1px) skewX(2deg)}
+  50%{transform:translate(3px,-2px) skewX(-2deg)}
+  75%{transform:translate(-2px,-1px)}}
+.tagline{margin-top:22px;font-size:clamp(17px,2.6vw,23px);color:var(--muted)}
+.tagline b{color:var(--text);font-weight:600}
+.typedline{display:block;min-height:1.6em;margin-top:10px}
+#typed{color:var(--cyan);font-weight:600;text-shadow:0 0 14px rgba(0,229,255,.35)}
+.caret{display:inline-block;width:10px;background:var(--cyan);margin-left:4px;
+  animation:blink 1s steps(1) infinite;border-radius:2px;height:1em;vertical-align:-.15em}
+@keyframes blink{50%{opacity:0}}
+/* ---- sections ---- */
+section{padding:64px 0}
+.sec-title{font-size:13px;letter-spacing:.35em;text-transform:uppercase;color:var(--cyan);margin-bottom:34px;display:flex;align-items:center;gap:16px}
+.sec-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+/* ---- project cards ---- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+.card{position:relative;border-radius:18px;padding:26px 26px 22px;background:var(--card);
+  border:1px solid rgba(255,255,255,.06);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s;
+  opacity:0;transform:translateY(26px);}
+.card.in{opacity:1;transform:none}
+.card::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;
+  background:linear-gradient(130deg,rgba(0,229,255,.5),transparent 32%,transparent 68%,rgba(124,77,255,.45));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .35s}
+.card:hover{transform:translateY(-6px);border-color:rgba(0,229,255,.35);
+  box-shadow:0 18px 44px rgba(0,0,0,.5),0 0 0 1px rgba(0,229,255,.12),0 0 34px rgba(0,229,255,.07)}
+.card:hover::before{opacity:1}
+.card h3{font-size:19px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stars{font-size:12px;color:#ffd54f;white-space:nowrap}
+.card p{color:var(--muted);font-size:14.5px;line-height:1.65;margin-bottom:14px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{font-size:11px;padding:4px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:var(--muted)}
+.card a.fill{position:absolute;inset:0;border-radius:inherit;z-index:1}
+.card .open{color:var(--cyan);font-size:13px;opacity:0;transition:opacity .3s;position:relative;z-index:2}
+.card:hover .open{opacity:1}
+.card .ripple{position:absolute;border-radius:50%;z-index:3;pointer-events:none;
+  background:radial-gradient(circle,rgba(0,229,255,.5),rgba(124,77,255,.28) 42%,transparent 70%);
+  transform:translate(-50%,-50%) scale(0);animation:rip .75s ease-out forwards}
+@keyframes rip{60%{opacity:.85}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+.card.selected{animation:selglitch .6s steps(4) both;z-index:5}
+@keyframes selglitch{
+  0%{filter:none;transform:none}
+  12%{filter:hue-rotate(95deg) saturate(2.4) contrast(1.3);transform:translate(-4px,2px) scale(.98)}
+  28%{filter:hue-rotate(-70deg) saturate(1.8);transform:translate(4px,-2px) scale(1.02)}
+  44%{filter:invert(.09) hue-rotate(45deg);transform:translate(-3px,-1px) scale(1.01)}
+  62%{filter:none;transform:translate(3px,1px) scale(.995)}
+  80%{filter:saturate(1.4);transform:translate(-2px,0)}
+  100%{filter:none;transform:none}}
+.card::after{content:"";position:absolute;left:0;top:0;width:100%;height:38%;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(0,229,255,.12),transparent);opacity:0}
+.card:hover::after{opacity:1;animation:scan 1.5s linear infinite}
+@keyframes scan{from{transform:translateY(-110%)}to{transform:translateY(380%)}}
+/* ---- guides ---- */
+.guides{display:flex;gap:18px;flex-wrap:wrap}
+.guide{flex:1;min-width:260px;border-radius:14px;padding:20px 22px;background:rgba(255,255,255,.03);
+  border:1px dashed rgba(255,255,255,.14);transition:.3s;position:relative}
+.guide a.fill{position:absolute;inset:0;border-radius:14px;z-index:1}
+.guide:hover b{color:var(--green)}
+.guide:hover{border-color:var(--green);background:rgba(102,187,106,.05)}
+.guide b{display:block;margin-bottom:6px}
+.guide span{color:var(--muted);font-size:14px;line-height:1.6}
+/* ---- support ---- */
+.support{text-align:center}
+.btnrow{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 30px;border-radius:999px;
+  font-weight:700;font-size:15px;text-decoration:none;letter-spacing:.02em;
+  transition:transform .25s,box-shadow .25s}
+.btn:hover{transform:translateY(-3px)}
+.btn.sponsor{background:linear-gradient(135deg,#ea4aaa,#c2185b);color:#fff;box-shadow:0 8px 28px rgba(234,74,170,.35)}
+.btn.patreon{background:linear-gradient(135deg,#f96854,#e64c37);color:#fff;box-shadow:0 8px 28px rgba(249,104,84,.32)}
+.btn.linktree{background:rgba(43,226,149,.12);color:#2be295;border:1px solid rgba(43,226,149,.4)}
+footer{padding:46px 0 60px;text-align:center;color:var(--muted);font-size:13.5px}
+footer .heart{color:#ea4aaa}
+footer a{color:var(--cyan);text-decoration:none}
+@media(max-width:640px){header{padding:64px 0 26px}.sec-title{margin-bottom:26px}.typedline{min-height:3.2em}.aurora{animation:none}}
+@media(prefers-reduced-motion:reduce){
+  .aurora,.grid,.kicker,.caret,h1.glitch::before,h1.glitch::after,
+  h1.glitch.glitching,.card.selected,.card:hover::after{animation:none}
+  .card{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+<div class="aurora"></div><div class="grid"></div>
+
+<header class="wrap">
+  <span class="kicker">👽 METAPOD · FRENZYPENGUIN MEDIA</span>
+  <h1 class="glitch" id="logo" data-t="neohiro">neohiro</h1>
+  <p class="tagline"><b>Defense is the best defense.</b>
+  <span class="typedline"><span id="typed"></span><span class="caret">&nbsp;</span></span></p>
+</header>
+
+<section class="wrap" id="featured-tools">
+  <div class="sec-title">Featured Tools</div>
+  <div class="cards">
+    <div class="card" data-repo="ExploitProtection"><a class="fill" href="ExploitProtection.html" aria-label="ExploitProtection details"></a>
+      <h3>ExploitProtection <span class="stars">★ 85</span></h3>
+      <p>Windows Exploit Protection settings (Ultimate) GUI — a community-maintained mitigation catalog plus a fast manager for bulk hardening.</p>
+      <div class="tags"><span class="tag">Python</span><span class="tag">Windows</span><span class="tag">Hardening</span></div></div>
+    <div class="card" data-repo="Cripple-NetStrip"><a class="fill" href="Cripple-NetStrip.html" aria-label="Cripple-NetStrip details"></a>
+      <h3>Cripple-NetStrip <span class="stars">★ 3</span></h3>
+      <p>Next-gen network hardening suite: DNS sinkhole, firewall, domain filter and debloater across Windows, Linux, macOS and Android.</p>
+      <div class="tags"><span class="tag">Network</span><span class="tag">DNS</span><span class="tag">Firewall</span></div></div>
+    <div class="card" data-repo="dnscrypt-proxy-gui"><a class="fill" href="dnscrypt-proxy-gui.html" aria-label="dnscrypt-proxy GUI details"></a>
+      <h3>dnscrypt-proxy GUI <span class="stars">★ 27</span></h3>
+      <p>Cross-platform graphical front-end for dnscrypt-proxy — encrypted DNS made point-and-click.</p>
+      <div class="tags"><span class="tag">DNS</span><span class="tag">Privacy</span><span class="tag">GUI</span></div></div>
+    <div class="card" data-repo="BlackGlass"><a class="fill" href="BlackGlass.html" aria-label="BlackGlass details"></a>
+      <h3>BlackGlass <span class="stars">★ 9</span></h3>
+      <p>Multi-client Second Life chat viewer with live minimap radar, in-session teleporting and a per-user Lists tab.</p>
+      <div class="tags"><span class="tag">Second Life</span><span class="tag">Protocol</span><span class="tag">Tkinter</span></div></div>
+    <div class="card" data-repo="HoneyScan"><a class="fill" href="HoneyScan.html" aria-label="HoneyScan details"></a>
+      <h3>HoneyScan <span class="stars">★ 2</span></h3>
+      <p>Passive honeypot for home networks — watch port scanners and snoopers in real time, beginner-friendly.</p>
+      <div class="tags"><span class="tag">Honeypot</span><span class="tag">IDS</span><span class="tag">Learning</span></div></div>
+    <div class="card" data-repo="SystemMonitor"><a class="fill" href="SystemMonitor.html" aria-label="SystemMonitor details"></a>
+      <h3>SystemMonitor <span class="stars">★ 0</span></h3>
+      <p>Futuristic desktop-widget system health monitor: rounded glass tiles, deep sensor chain, true manufacturer metrics.</p>
+      <div class="tags"><span class="tag">psutil</span><span class="tag">Widget</span><span class="tag">Sensors</span></div></div>
+  </div>
+</section>
+
+<section class="wrap" id="hardening-guides">
+  <div class="sec-title">Hardening Guides</div>
+  <div class="guides">
+    <div class="guide"><a class="fill" href="windows.html" aria-label="Windows hardening guide"></a><b>🪟 windows</b><span>STIG-style manual + automated Windows 10/11 new-install hardening checklist.</span></div>
+    <div class="guide"><a class="fill" href="ubuntu.html" aria-label="Ubuntu hardening guide"></a><b>🐧 ubuntu</b><span>Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban.</span></div>
+  </div>
+</section>
+
+<section class="wrap support" id="support">
+  <div class="sec-title" style="justify-content:center">Support The Work</div>
+  <div class="btnrow">
+    <a class="btn sponsor" rel="noopener noreferrer nofollow no-referrer" href="https://github.com/sponsors/neohiro">❤ Sponsor on GitHub</a>
+    <a class="btn patreon" rel="noopener noreferrer nofollow no-referrer" href="https://www.patreon.com/frenzypenguin_media">Patreon</a>
+    <a class="btn linktree" rel="noopener noreferrer nofollow no-referrer" href="https://linktr.ee/frenzypenguin.media">🌐 frenzypenguin.media</a>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>Made with <span class="heart">♥</span> by <a href="https://github.com/neohiro">neohiro</a> ·
+  <a href="https://github.com/neohiro?tab=repositories">all repositories</a></p>
+</footer>
+
+<script>
+/*__CORE_START__*/
+/* Shared site core - SINGLE SOURCE OF TRUTH.
+   Edits belong HERE; build-sites.ps1 injects this into each index.html
+   between __CORE_START__/__CORE_END__ markers. Never edit injected copies. */
+
+// ---- Configuration constants ----
+const CONFIG = {
+  REVEAL_THRESHOLD: 0.12,
+  REVEAL_DELAY_STAGGER: 70,
+  REVEAL_DELAY_CLEAR_MS: 800,
+  RIPPLE_SCALE_FACTOR: 2.3,
+  SELECT_FLASH_DURATION: 650,
+  GLITCH_DURATION: 420,
+  RANDOM_GLITCH_BASE_MS: 2600,
+  RANDOM_GLITCH_VARIANCE_MS: 3400,
+  TYPEWRITER_CHAR_MIN_MS: 16,
+  TYPEWRITER_CHAR_MAX_MS: 34,
+  TYPEWRITER_HOLD_MS: 1500,
+  TYPEWRITER_ERASE_MIN_MS: 8,
+  TYPEWRITER_ERASE_MAX_MS: 14,
+  TYPEWRITER_NEXT_DELAY_MS: 260
+};
+
+// ---- fetch helper (no client-side cache) ----
+function fetchJson(url) {
+  if (!url || typeof url !== 'string') {
+    return Promise.reject(new Error('fetchJson: invalid url'));
+  }
+  return fetch(url).then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  });
+}
+
+// ---- tiny DOM + number helpers ----
+const fmt = n => {
+  if (typeof n !== 'number' || !isFinite(n)) return '0';
+  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+};
+
+const el = (tag, className, text) => {
+  const n = document.createElement(tag);
+  if (className) n.className = className;
+  if (text != null) n.textContent = text;
+  return n;
+};
+
+// ---- reveal-on-scroll with stagger (clears delay after entry so hover feels instant) ----
+function initReveal(selector) {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        observer.unobserve(entry.target);
+        const target = entry.target;
+        setTimeout(() => { target.style.transitionDelay = ''; }, CONFIG.REVEAL_DELAY_CLEAR_MS);
+      }
+    });
+  }, { threshold: CONFIG.REVEAL_THRESHOLD });
+
+  const elements = document.querySelectorAll(selector);
+  elements.forEach((elm, i) => {
+    elm.style.transitionDelay = (i % 3 * CONFIG.REVEAL_DELAY_STAGGER) + 'ms';
+    observer.observe(elm);
+  });
+
+  return { observer, disconnect: () => observer.disconnect() };
+}
+
+// ---- repo select burst: ripple + glitch flash ----
+function attachSelect(card) {
+  card.addEventListener('pointerdown', e => {
+    const rect = card.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * CONFIG.RIPPLE_SCALE_FACTOR;
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left}px;top:${e.clientY - rect.top}px`;
+    card.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 800);
+
+    if (card._selTimer) clearTimeout(card._selTimer);
+    card.classList.remove('selected');
+    void card.offsetWidth;
+    card.classList.add('selected');
+    card._selTimer = setTimeout(() => card.classList.remove('selected'), CONFIG.SELECT_FLASH_DURATION);
+  });
+}
+
+// ---- glitching logo + typewriter tagline ----
+let glitchTimer = null;
+let randGlitchTimer = null;
+
+function glitchLogo(logoEl) {
+  if (!logoEl) return;
+  if (glitchTimer) clearTimeout(glitchTimer);
+  logoEl.classList.remove('glitching');
+  void logoEl.offsetWidth;
+  logoEl.classList.add('glitching');
+  glitchTimer = setTimeout(() => logoEl.classList.remove('glitching'), CONFIG.GLITCH_DURATION);
+}
+
+function startTypewriter(typedEl, phrases, logoEl) {
+  if (!typedEl || !phrases?.length) return;
+
+  let phraseIndex = 0;
+
+  function typePhrase(text, charIndex) {
+    typedEl.textContent = text.slice(0, charIndex);
+    if (charIndex < text.length) {
+      const delay = CONFIG.TYPEWRITER_CHAR_MIN_MS + Math.random() * (CONFIG.TYPEWRITER_CHAR_MAX_MS - CONFIG.TYPEWRITER_CHAR_MIN_MS);
+      setTimeout(() => typePhrase(text, charIndex + 1), delay);
+    } else {
+      setTimeout(() => {
+        glitchLogo(logoEl);
+        erasePhrase(text, text.length);
+      }, CONFIG.TYPEWRITER_HOLD_MS);
+    }
+  }
+
+  function erasePhrase(text, charIndex) {
+    typedEl.textContent = text.slice(0, charIndex);
+    if (charIndex > 0) {
+      const delay = CONFIG.TYPEWRITER_ERASE_MIN_MS + Math.random() * (CONFIG.TYPEWRITER_ERASE_MAX_MS - CONFIG.TYPEWRITER_ERASE_MIN_MS);
+      setTimeout(() => erasePhrase(text, charIndex - 1), delay);
+    } else {
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+      setTimeout(() => typePhrase(phrases[phraseIndex], 0), CONFIG.TYPEWRITER_NEXT_DELAY_MS);
+    }
+  }
+
+  typePhrase(phrases[0], 0);
+}
+
+function startRandomGlitch(logoEl) {
+  if (!logoEl) return;
+  function tick() {
+    glitchLogo(logoEl);
+    randGlitchTimer = setTimeout(tick, CONFIG.RANDOM_GLITCH_BASE_MS + Math.random() * CONFIG.RANDOM_GLITCH_VARIANCE_MS);
+  }
+  tick();
+}
+
+function cleanupCore(observers = []) {
+  if (glitchTimer) clearTimeout(glitchTimer);
+  if (randGlitchTimer) clearTimeout(randGlitchTimer);
+  glitchTimer = null;
+  randGlitchTimer = null;
+  observers.forEach(obs => {
+    if (obs && typeof obs.disconnect === 'function') obs.disconnect();
+  });
+}
+
+// Expose for page-level cleanup if needed
+window.__neohiroCoreCleanup = cleanupCore;
+/*__CORE_END__*/
+const revealResult = initReveal('.card,.guide');
+
+/* ---- typewriter tagline: type, hold, delete, next ---- */
+startTypewriter(
+  document.getElementById('typed'),
+  [
+    'Open-source security hardening for Windows & Linux',
+    'Exploit mitigations, point-and-click simple',
+    'ExploitProtection — the community mitigation catalog',
+    'Encrypted DNS for everyone',
+    'Cripple-NetStrip — lock down your network',
+    'Firewalls · sinkholes · honeypots',
+    'HoneyScan — catch port scanners red-handed',
+    'Zero telemetry. Full transparency.',
+    'STIG-grade guides for fresh installs',
+    'SystemMonitor — your PC in glass tiles',
+    'Privacy is the foundation, not a feature',
+    'BlackGlass — Second Life on radar',
+    'Built by neohiro · powered by METAPOD'
+  ],
+  document.getElementById('logo')
+);
+
+/* live star counts: removed - site uses committed snapshot only */
+
+// Cleanup on page unload
+window.addEventListener('pagehide', () => window.__neohiroCoreCleanup([revealResult.observer]));
+</script>
+</body>
+</html>

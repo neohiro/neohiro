@@ -1,0 +1,48 @@
+{
+  "domains": [
+    {
+      "domain": "weebly.com",
+      "subdomains": ["@", "www"],
+      "reason": "Blocks Tailscale exit nodes",
+      "enabled": true
+    },
+    {
+      "domain": "secondlife.com",
+      "subdomains": ["@", "www", "marketplace"],
+      "reason": "Blocks Tailscale exit nodes",
+      "enabled": true
+    },
+    {
+      "domain": "marketplace.secondlife.com",
+      "subdomains": ["@"],
+      "reason": "Blocks Tailscale exit nodes",
+      "enabled": true
+    }
+  ],
+  "dns": {
+    "resolvers": ["1.1.1.1", "8.8.8.8"],
+    "timeoutMs": 5000,
+    "cacheTtlMs": 300000,
+    "cacheMaxSize": 1000
+  },
+  "probe": {
+    "enabled": false,
+    "urls": ["https://{domain}/"],
+    "timeoutMs": 10000,
+    "blockSignatures": []
+  },
+  "tailscale": {
+    "enabled": true,
+    "socket": ""
+  },
+  "hosts": {
+    "path": "",
+    "backupDir": "",
+    "createBackup": true,
+    "maxBackups": 10
+  },
+  "logging": {
+    "level": "info",
+    "format": "text"
+  }
+}
