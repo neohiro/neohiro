@@ -56,20 +56,12 @@
 
 ### 🔗 Links
 
-<table width="100%" align="center" border="0" cellpadding="8" cellspacing="0">
-  <tbody>
-    <tr>
-      <td width="33%" align="center" valign="top">🌐 <a href="https://neohiro.github.io">neohiro</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-      <td width="33%" align="center" valign="top">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-      <td width="33%" align="center" valign="top">🧬 <a href="https://transhumanists.github.io">transhumanists</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
-    </tr>
-    <tr>
-      <td width="33%" align="center" valign="top">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
-      <td width="33%" align="center" valign="top">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
-      <td width="33%" align="center" valign="top">🔗 <a href="https://domail.space">domail.space</a></td>
-    </tr>
-  </tbody>
-</table>
+### 🔗 Links
+
+| | | |
+| :---: | :---: | :---: |
+| 🌐 [neohiro](https://neohiro.github.io) | 🔑 [mesh-vanity-key](https://neohiro.github.io/mesh-vanity-key) | 🧬 [transhumanists](https://transhumanists.github.io) |
+| 🎬 [frenzypenguin.media](https://frenzypenguin.media) | 🏝️ [openstageis.land](https://openstageis.land) | 🔗 [domail.space](https://domail.space) |
 
 ---
 
