@@ -16,14 +16,14 @@
 <tr><th>Project</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td>[![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=%E2%AD%90%20ExploitProtection)](https://github.com/neohiro/ExploitProtection)</td><td>Windows Exploit Protection settings (Ultimate) GUI</td></tr>
-<tr><td>[![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=%E2%AD%90%20dnscrypt%20proxy%20GUI)](https://github.com/neohiro/dnscrypt-proxy-gui)</td><td>Cross-platform GUI for dnscrypt-proxy</td></tr>
-<tr><td>[![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple%20NetStrip)](https://github.com/neohiro/Cripple-NetStrip)</td><td>Network hardening · DNS sinkhole · firewall · domain filter</td></tr>
-<tr><td>[![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume)</td><td>Self-healing OpenCode sessions · retries · model rotation · autopilot</td></tr>
-<tr><td>[![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=%E2%AD%90%20meteo-ics)](https://github.com/neohiro/meteo-ics)</td><td>Cross-platform .ics/WebCal weather · air quality · astronomy feed</td></tr>
-<tr><td>[![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan)</td><td>Passive honeypot for home networks · detects scans, brute-force, IoT malware</td></tr>
-<tr><td>[![DNSLookup](https://img.shields.io/github/stars/neohiro/DNSLookup?style=flat&label=%E2%AD%90%20DNSLookup)](https://github.com/neohiro/DNSLookup)</td><td>IPv4 + IPv6 DNS lookup · records, reverse lookups, diagnostics</td></tr>
-<tr><td>[![lora-multiboot](https://img.shields.io/github/stars/neohiro/lora-multiboot?style=flat&label=%E2%AD%90%20lora-multiboot)](https://github.com/neohiro/lora-multiboot)</td><td>Role-aware multi-slot LoRa firmware · Meshtastic and MeshCore on one radio</td></tr>
+<tr><td>[![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=ExploitProtection&logo=github)](https://github.com/neohiro/ExploitProtection)</td><td>Windows Exploit Protection settings (Ultimate) GUI</td></tr>
+<tr><td>[![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=dnscrypt%20proxy%20GUI&logo=github)](https://github.com/neohiro/dnscrypt-proxy-gui)</td><td>Cross-platform GUI for dnscrypt-proxy</td></tr>
+<tr><td>[![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=Cripple%20NetStrip&logo=github)](https://github.com/neohiro/Cripple-NetStrip)</td><td>Network hardening · DNS sinkhole · firewall · domain filter</td></tr>
+<tr><td>[![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=auto-resume&logo=github)](https://github.com/neohiro/auto-resume)</td><td>Self-healing OpenCode sessions · retries · model rotation · autopilot</td></tr>
+<tr><td>[![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=meteo-ics&logo=github)](https://github.com/neohiro/meteo-ics)</td><td>Cross-platform .ics/WebCal weather · air quality · astronomy feed</td></tr>
+<tr><td>[![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=HoneyScan&logo=github)](https://github.com/neohiro/HoneyScan)</td><td>Passive honeypot for home networks · detects scans, brute-force, IoT malware</td></tr>
+<tr><td>[![DNSLookup](https://img.shields.io/github/stars/neohiro/DNSLookup?style=flat&label=DNSLookup&logo=github)](https://github.com/neohiro/DNSLookup)</td><td>IPv4 + IPv6 DNS lookup · records, reverse lookups, diagnostics</td></tr>
+<tr><td>[![lora-multiboot](https://img.shields.io/github/stars/neohiro/lora-multiboot?style=flat&label=lora-multiboot&logo=github)](https://github.com/neohiro/lora-multiboot)</td><td>Role-aware multi-slot LoRa firmware · Meshtastic and MeshCore on one radio</td></tr>
 </tbody>
 </table>
 
@@ -34,8 +34,8 @@
 <tr><th>Guide</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td>[![windows](https://img.shields.io/github/stars/neohiro/windows?style=flat&label=%E2%AD%90%20windows)](https://github.com/neohiro/windows)</td><td>STIG-style manual + automated Windows 10/11 new-install hardening checklist</td></tr>
-<tr><td>[![linux](https://img.shields.io/github/stars/neohiro/linux?style=flat&label=%E2%AD%90%20linux)](https://github.com/neohiro/linux)</td><td>Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban</td></tr>
+<tr><td>[![windows](https://img.shields.io/github/stars/neohiro/windows?style=flat&label=windows&logo=github)](https://github.com/neohiro/windows)</td><td>STIG-style manual + automated Windows 10/11 new-install hardening checklist</td></tr>
+<tr><td>[![linux](https://img.shields.io/github/stars/neohiro/linux?style=flat&label=linux&logo=github)](https://github.com/neohiro/linux)</td><td>Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban</td></tr>
 </tbody>
 </table>
 
@@ -56,23 +56,17 @@
 
 ### 🔗 Links
 
-<!--
-  GitHub strips inline CSS from README HTML, so styling must use plain HTML
-  attributes here. `width="100%"` plus equal `width="33.33%"` columns keeps the
-  grid screen-wide and even. `align="center"` centers the labels, and
-  `border="0" cellpadding="8" cellspacing="0"` removes any visible raster.
--->
 <table width="100%" align="center" border="0" cellpadding="8" cellspacing="0">
   <tbody>
     <tr>
-      <td width="33.33%" align="center" valign="top">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
-      <td width="33.33%" align="center" valign="top">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
-      <td width="33.33%" align="center" valign="top">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
+      <td width="33%" align="center" valign="top">🌐 <a href="https://neohiro.github.io">neohiro</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
+      <td width="33%" align="center" valign="top">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
+      <td width="33%" align="center" valign="top">🧬 <a href="https://transhumanists.github.io">transhumanists</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
     </tr>
     <tr>
-      <td width="33.33%" align="center" valign="top">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
-      <td width="33.33%" align="center" valign="top">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
-      <td width="33.33%" align="center" valign="top">🔗 <a href="https://domail.space">domail.space</a></td>
+      <td width="33%" align="center" valign="top">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
+      <td width="33%" align="center" valign="top">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
+      <td width="33%" align="center" valign="top">🔗 <a href="https://domail.space">domail.space</a></td>
     </tr>
   </tbody>
 </table>
