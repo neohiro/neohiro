@@ -56,10 +56,12 @@
 
 ### 🔗 Links
 
-| | | |
-| --- | --- | --- |
+<div align="center">
+
 | 🌐 <a href="https://neohiro.github.io">neohiro</a> | 🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a> | 🧬 <a href="https://transhumanists.github.io">transhumanists</a> |
 | 🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a> | 🏝️ <a href="https://openstageis.land">openstageis.land</a> | 🔗 <a href="https://domail.space">domail.space</a> |
+
+</div>
 
 ---
 
