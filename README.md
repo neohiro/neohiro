@@ -56,26 +56,10 @@
 
 ### 🔗 Links
 
-<!--
-  GitHub strips inline CSS from README HTML, so styling must use plain HTML
-  attributes here. `width="100%"` plus equal `width="33.33%"` columns keeps the
-  grid screen-wide and even. `align="center"` centers the labels, and
-  `border="0" cellpadding="8" cellspacing="0"` removes any visible raster.
--->
-<table width="100%" align="center" border="0" cellpadding="8" cellspacing="0">
-  <tbody>
-    <tr>
-      <td width="33.33%" align="center" valign="top">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
-      <td width="33.33%" align="center" valign="top">🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a></td>
-      <td width="33.33%" align="center" valign="top">🧬 <a href="https://transhumanists.github.io">transhumanists</a></td>
-    </tr>
-    <tr>
-      <td width="33.33%" align="center" valign="top">🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a></td>
-      <td width="33.33%" align="center" valign="top">🏝️ <a href="https://openstageis.land">openstageis.land</a></td>
-      <td width="33.33%" align="center" valign="top">🔗 <a href="https://domail.space">domail.space</a></td>
-    </tr>
-  </tbody>
-</table>
+| | | |
+| --- | --- | --- |
+| 🌐 <a href="https://neohiro.github.io">neohiro</a> | 🔑 <a href="https://neohiro.github.io/mesh-vanity-key">mesh-vanity-key</a> | 🧬 <a href="https://transhumanists.github.io">transhumanists</a> |
+| 🎬 <a href="https://frenzypenguin.media">frenzypenguin.media</a> | 🏝️ <a href="https://openstageis.land">openstageis.land</a> | 🔗 <a href="https://domail.space">domail.space</a> |
 
 ---
 
