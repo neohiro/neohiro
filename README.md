@@ -62,7 +62,7 @@
   grid screen-wide and even. `align="center"` centers the labels, and
   `border="0" cellpadding="8" cellspacing="0"` removes any visible raster.
 -->
-<table width="100%" border="0" cellpadding="8" cellspacing="0">
+<table width="100%" align="center" border="0" cellpadding="0" cellspacing="0" style="width:100%">
   <tbody>
     <tr>
       <td width="33.33%" align="center" valign="top">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
