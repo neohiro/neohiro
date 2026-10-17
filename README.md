@@ -46,7 +46,7 @@
 
 ### 🔗 Links
 
-<table width="100%" align="center">
+<table width="100%" align="center" cellpadding="12" cellspacing="0" style="font-size:18px;">
   <tbody>
     <tr>
       <td align="center" width="33.33%">🌐 <a href="https://neohiro.github.io">neohiro</a></td>
