@@ -13,21 +13,21 @@
 
 | Project | Description |
 | --- | --- |
-| [![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=%E2%AD%90%20ExploitProtection)](https://github.com/neohiro/ExploitProtection) | Windows Exploit Protection settings (Ultimate) GUI |
-| [![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=%E2%AD%90%20dnscrypt-proxy-gui)](https://github.com/neohiro/dnscrypt-proxy-gui) | Cross-platform GUI for dnscrypt-proxy |
-| [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=%E2%AD%90%20Cripple-NetStrip)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
-| [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=%E2%AD%90%20auto-resume)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · autopilot |
-| [![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=%E2%AD%90%20meteo-ics)](https://github.com/neohiro/meteo-ics) | Cross-platform .ics/WebCal weather · air quality · astronomy feed |
-| [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=%E2%AD%90%20HoneyScan)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks · detects scans, brute-force, IoT malware |
-| [![DNSLookup](https://img.shields.io/github/stars/neohiro/DNSLookup?style=flat&label=%E2%AD%90%20DNSLookup)](https://github.com/neohiro/DNSLookup) | IPv4 + IPv6 DNS lookup · records, reverse lookups, diagnostics |
-| [![lora-multiboot](https://img.shields.io/github/stars/neohiro/lora-multiboot?style=flat&label=%E2%AD%90%20lora-multiboot)](https://github.com/neohiro/lora-multiboot) | Role-aware multi-slot LoRa firmware · Meshtastic and MeshCore on one radio |
+| [![ExploitProtection](https://img.shields.io/github/stars/neohiro/ExploitProtection?style=flat&label=ExploitProtection&logo=github)](https://github.com/neohiro/ExploitProtection) | Windows Exploit Protection settings (Ultimate) GUI |
+| [![dnscrypt-proxy-gui](https://img.shields.io/github/stars/neohiro/dnscrypt-proxy-gui?style=flat&label=dnscrypt%20proxy%20GUI&logo=github)](https://github.com/neohiro/dnscrypt-proxy-gui) | Cross-platform GUI for dnscrypt-proxy |
+| [![Cripple-NetStrip](https://img.shields.io/github/stars/neohiro/Cripple-NetStrip?style=flat&label=Cripple%20NetStrip&logo=github)](https://github.com/neohiro/Cripple-NetStrip) | Network hardening · DNS sinkhole · firewall · domain filter |
+| [![auto-resume](https://img.shields.io/github/stars/neohiro/auto-resume?style=flat&label=auto-resume&logo=github)](https://github.com/neohiro/auto-resume) | Self-healing OpenCode sessions · retries · model rotation · autopilot |
+| [![meteo-ics](https://img.shields.io/github/stars/neohiro/meteo-ics?style=flat&label=meteo-ics&logo=github)](https://github.com/neohiro/meteo-ics) | Cross-platform .ics/WebCal weather · air quality · astronomy feed |
+| [![HoneyScan](https://img.shields.io/github/stars/neohiro/HoneyScan?style=flat&label=HoneyScan&logo=github)](https://github.com/neohiro/HoneyScan) | Passive honeypot for home networks · detects scans, brute-force, IoT malware |
+| [![DNSLookup](https://img.shields.io/github/stars/neohiro/DNSLookup?style=flat&label=DNSLookup&logo=github)](https://github.com/neohiro/DNSLookup) | IPv4 + IPv6 DNS lookup · records, reverse lookups, diagnostics |
+| [![lora-multiboot](https://img.shields.io/github/stars/neohiro/lora-multiboot?style=flat&label=lora-multiboot&logo=github)](https://github.com/neohiro/lora-multiboot) | Role-aware multi-slot LoRa firmware · Meshtastic and MeshCore on one radio |
 
 ### 🔐 Hardening guides
 
 | Guide | Description |
 | --- | --- |
-| [![windows](https://img.shields.io/github/stars/neohiro/windows?style=flat&label=%E2%AD%90%20windows)](https://github.com/neohiro/windows) | STIG-style manual + automated Windows 10/11 new-install hardening checklist |
-| [![linux](https://img.shields.io/github/stars/neohiro/linux?style=flat&label=%E2%AD%90%20linux)](https://github.com/neohiro/linux) | Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban |
+| [![windows](https://img.shields.io/github/stars/neohiro/windows?style=flat&label=windows&logo=github)](https://github.com/neohiro/windows) | STIG-style manual + automated Windows 10/11 new-install hardening checklist |
+| [![linux](https://img.shields.io/github/stars/neohiro/linux?style=flat&label=linux&logo=github)](https://github.com/neohiro/linux) | Post-install Linux hardening: firewall, encrypted DNS, Tor routing, fail2ban |
 
 ### 🧰 Toolbox
 
