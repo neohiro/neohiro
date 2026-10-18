@@ -47,7 +47,7 @@
         "type": "local",
         "command": ["python", "-m", "scrapling.cli", "mcp"],
         "disabled": true,
-        "note": "Requires pip install 'scrapling[ai]'. Installed but non-functional: orjson DLL blocked by App Control policy causes <frozen runpy> crash on import (scrapling.cli). Use library directly (from scrapling.fetchers) until policy resolved."
+        "note": "Status: FAILED (orjson DLL blocked by App Control → <frozen runpy> crash). Disabled to prevent broken server launch. Library import works only if orjson is whitelisted."
       },
       "github": {
         "type": "local",
