@@ -1,6 +1,9 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["./.opencode/plugins/github-context-augment.ts", "./.opencode/plugins/opencode-context-prune.ts"],
+  "plugins": [
+    "./.opencode/plugins/github-context-augment.ts",
+    "./.opencode/plugins/opencode-context-prune.ts"
+  ],
   "mcp": {
     "servers": {
       "context7": {
@@ -14,44 +17,80 @@
       },
       "filesystem": {
         "type": "local",
-        "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-filesystem",
+          "."
+        ],
         "disabled": false
       },
       "sequential-thinking": {
         "type": "local",
-        "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-sequential-thinking"
+        ],
         "disabled": false
       },
       "everything": {
         "type": "local",
-        "command": ["npx", "-y", "@modelcontextprotocol/server-everything"],
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-everything"
+        ],
         "disabled": false
       },
       "git": {
         "type": "local",
-        "command": ["python", "-m", "mcp_server_git", "--repository", "."],
+        "command": [
+          "python",
+          "-m",
+          "mcp_server_git",
+          "--repository",
+          "."
+        ],
         "disabled": false
       },
       "fetch": {
         "type": "local",
-        "command": ["python", "-m", "mcp_server_fetch"],
+        "command": [
+          "python",
+          "-m",
+          "mcp_server_fetch"
+        ],
         "disabled": true,
         "note": "Deprecated: replaced by brave-search (live web), playwright (JS/full-page), and context7 (library docs)."
       },
       "memory": {
         "type": "local",
-        "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-memory"
+        ],
         "disabled": false
       },
       "scrapling": {
         "type": "local",
-        "command": ["python", "-m", "scrapling.cli", "mcp"],
-        "disabled": false,
-        "note": "Whitelist applied (orjson DLL loads; import passes). Command: python -m scrapling.cli mcp (stdio). If frozen/early-exit, try --http --port 8000 for streamable-HTTP. Dependency conflict: mcp==2.3.0 breaks mcp-server-fetch/git/time (<2)."
+        "command": [
+          "python",
+          "-m",
+          "scrapling.cli",
+          "mcp"
+        ],
+        "disabled": true,
+        "note": "Server exits 0 instantly (not blocking); stdio and --http both exit. Assumption: requires stdio wrapper/fix upstream; disabled until fixed."
       },
       "github": {
         "type": "local",
-        "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-github"
+        ],
         "disabled": false,
         "environment": {
           "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
@@ -59,21 +98,36 @@
       },
       "time": {
         "type": "local",
-        "command": ["python", "-m", "mcp_server_time"],
+        "command": [
+          "python",
+          "-m",
+          "mcp_server_time"
+        ],
         "disabled": false
       },
       "playwright": {
         "type": "local",
-        "command": ["npx", "-y", "@playwright/mcp"],
+        "command": [
+          "npx",
+          "-y",
+          "@playwright/mcp"
+        ],
         "disabled": false
       },
       "sqlite": {
         "type": "local",
-        "command": ["npx", "-y", "mcp-server-sqlite-npx", "."],
+        "command": [
+          "npx",
+          "-y",
+          "mcp-server-sqlite-npx",
+          "."
+        ],
         "disabled": true
       }
     }
   },
-  "instructions": "ROLE: Senior Principal Engineer — top-percentile deliverer, zero-tolerance for mediocrity. MANDATE: Deliver above expectations; exceed industry standards; never ask for permission, clarification, or confirmation — EXECUTE THEN REPORT. UNSUPERVISED MODE ACTIVE. GROUND TRUTH PROTOCOL: Before any code, resolve library IDs via context7 (query-docs) or scrapling; never invent APIs. DOCUMENT OVER MEMORY: Current docs beat training data. CONTEXT: Load memory for project conventions; write back critical decisions. SPEED: Sequential-thinking ONLY for complex multi-file/multi-system changes; else direct execution. TOOLS AUTHORITY — USE WITHOUT HESITATION: filesystem (scoped edits), github (repo/PR/query), playwright (visual/page retrieval), scrapling (scraping/web extraction), context7 (library docs), time (timestamps), memory (persist). DO NOT PASSIVELY WAIT. DO NOT ASK 'SHOULD I?' — YOU WILL DECIDE, EXECUTE, AND DELIVER THE BEST POSSIBLE OUTCOME. CODE QUALITY CEILING: Every function must include error handling, type clarity, and documentation; every change must improve the codebase relative to its state. VERIFY: After edits use filesystem/list_directory or playwright/browser_snapshot to confirm results; never assume success. OUTPUT FORMAT: Provide concise explanation + the delivered artifact; do not apologize, do not hedge, do not underdeliver.",
-  "skills": ["opencode"]
+  "instructions": "ROLE: Senior Principal Engineer \u00e2\u20ac\u201d top-percentile deliverer, zero-tolerance for mediocrity. MANDATE: Deliver above expectations; exceed industry standards; never ask for permission, clarification, or confirmation \u00e2\u20ac\u201d EXECUTE THEN REPORT. UNSUPERVISED MODE ACTIVE. GROUND TRUTH PROTOCOL: Before any code, resolve library IDs via context7 (query-docs) or scrapling; never invent APIs. DOCUMENT OVER MEMORY: Current docs beat training data. CONTEXT: Load memory for project conventions; write back critical decisions. SPEED: Sequential-thinking ONLY for complex multi-file/multi-system changes; else direct execution. TOOLS AUTHORITY \u00e2\u20ac\u201d USE WITHOUT HESITATION: filesystem (scoped edits), github (repo/PR/query), playwright (visual/page retrieval), scrapling (scraping/web extraction), context7 (library docs), time (timestamps), memory (persist). DO NOT PASSIVELY WAIT. DO NOT ASK 'SHOULD I?' \u00e2\u20ac\u201d YOU WILL DECIDE, EXECUTE, AND DELIVER THE BEST POSSIBLE OUTCOME. CODE QUALITY CEILING: Every function must include error handling, type clarity, and documentation; every change must improve the codebase relative to its state. VERIFY: After edits use filesystem/list_directory or playwright/browser_snapshot to confirm results; never assume success. OUTPUT FORMAT: Provide concise explanation + the delivered artifact; do not apologize, do not hedge, do not underdeliver.",
+  "skills": [
+    "opencode"
+  ]
 }
