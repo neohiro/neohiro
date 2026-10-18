@@ -46,17 +46,17 @@
 
 ### 🔗 Links
 
-<table width="100%" style="width:100%; font-size:32px; border-collapse:collapse;" align="center" cellpadding="30" cellspacing="0" border="1">
+<table width="100%" style="width:100%; font-size:34px; border-collapse:collapse;" align="center" cellpadding="30" cellspacing="0" border="1">
   <tbody>
-    <tr style="font-size:32px;">
-      <td align="center" width="33.33%" style="padding:30px; font-size:32px;"><a href="https://neohiro.github.io" style="font-size:32px;">🌐 neohiro</a></td>
-      <td align="center" width="33.33%" style="padding:30px; font-size:32px;"><a href="https://neohiro.github.io/mesh-vanity-key" style="font-size:32px;">🔑 mesh-vanity-key</a></td>
-      <td align="center" width="33.33%" style="padding:30px; font-size:32px;"><a href="https://transhumanists.github.io" style="font-size:32px;">🧬 transhumanists</a></td>
+    <tr style="font-size:34px; font-weight:700;">
+      <td align="center" width="33.33%" style="padding:30px; font-size:34px; font-weight:700; line-height:2.0;"><a href="https://neohiro.github.io" style="font-size:34px; font-weight:700;">🌐 neohiro</a></td>
+      <td align="center" width="33.33%" style="padding:30px; font-size:34px; font-weight:700; line-height:2.0;"><a href="https://neohiro.github.io/mesh-vanity-key" style="font-size:34px; font-weight:700;">🔑 mesh-vanity-key</a></td>
+      <td align="center" width="33.33%" style="padding:30px; font-size:34px; font-weight:700; line-height:2.0;"><a href="https://transhumanists.github.io" style="font-size:34px; font-weight:700;">🧬 transhumanists</a></td>
     </tr>
-    <tr style="font-size:32px;">
-      <td align="center" width="33.33%" style="padding:30px; font-size:32px;"><a href="https://frenzypenguin.media" style="font-size:32px;">🎬 frenzypenguin.media</a></td>
-      <td align="center" width="33.33%" style="padding:30px; font-size:32px;"><a href="https://openstageis.land" style="font-size:32px;">🏝️ openstageis.land</a></td>
-      <td align="center" width="33.33%" style="padding:30px; font-size:32px;"><a href="https://domail.space" style="font-size:32px;">🔗 domail.space</a></td>
+    <tr style="font-size:34px; font-weight:700;">
+      <td align="center" width="33.33%" style="padding:30px; font-size:34px; font-weight:700; line-height:2.0;"><a href="https://frenzypenguin.media" style="font-size:34px; font-weight:700;">🎬 frenzypenguin.media</a></td>
+      <td align="center" width="33.33%" style="padding:30px; font-size:34px; font-weight:700; line-height:2.0;"><a href="https://openstageis.land" style="font-size:34px; font-weight:700;">🏝️ openstageis.land</a></td>
+      <td align="center" width="33.33%" style="padding:30px; font-size:34px; font-weight:700; line-height:2.0;"><a href="https://domail.space" style="font-size:34px; font-weight:700;">🔗 domail.space</a></td>
     </tr>
   </tbody>
 </table>
