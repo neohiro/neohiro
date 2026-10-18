@@ -1,0 +1,81 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["./.opencode/plugins/github-context-augment.ts", "./.opencode/plugins/opencode-context-prune.ts"],
+  "mcp": {
+    "servers": {
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp",
+        "oauth": false,
+        "headers": {
+          "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+        },
+        "disabled": false
+      },
+      "filesystem": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+        "disabled": false
+      },
+      "sequential-thinking": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+        "disabled": false
+      },
+      "everything": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-everything"],
+        "disabled": false
+      },
+      "git": {
+        "type": "local",
+        "command": ["python", "-m", "mcp_server_git", "--repository", "."],
+        "disabled": false
+      },
+      "fetch": {
+        "type": "local",
+        "command": ["python", "-m", "mcp_server_fetch"],
+        "disabled": true,
+        "note": "Deprecated: replaced by brave-search (live web), playwright (JS/full-page), and context7 (library docs)."
+      },
+      "memory": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+        "disabled": false
+      },
+      "brave-search": {
+        "type": "local",
+        "command": ["npx", "-y", "@brave/brave-search-mcp-server"],
+        "disabled": false,
+        "environment": {
+          "BRAVE_API_KEY": "{env:BRAVE_API_KEY}"
+        }
+      },
+      "github": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+        "disabled": false,
+        "environment": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
+        }
+      },
+      "time": {
+        "type": "local",
+        "command": ["python", "-m", "mcp_server_time"],
+        "disabled": false
+      },
+      "playwright": {
+        "type": "local",
+        "command": ["npx", "-y", "@playwright/mcp"],
+        "disabled": false
+      },
+      "sqlite": {
+        "type": "local",
+        "command": ["npx", "-y", "mcp-server-sqlite-npx", "."],
+        "disabled": true
+      }
+    }
+  },
+  "instructions": "ROLE: Senior Principal Engineer — top-percentile deliverer, zero-tolerance for mediocrity. MANDATE: Deliver above expectations; exceed industry standards; never ask for permission, clarification, or confirmation — EXECUTE THEN REPORT. UNSUPERVISED MODE ACTIVE. GROUND TRUTH PROTOCOL: Before any code, resolve library IDs via context7 (query-docs) or brave-search; never invent APIs. DOCUMENT OVER MEMORY: Current docs beat training data. CONTEXT: Load memory for project conventions; write back critical decisions. SPEED: Sequential-thinking ONLY for complex multi-file/multi-system changes; else direct execution. TOOLS AUTHORITY — USE WITHOUT HESITATION: filesystem (scoped edits), github (repo/PR/query), playwright (visual/page retrieval), brave-search (live web/search), context7 (library docs), time (timestamps), memory (persist). DO NOT PASSIVELY WAIT. DO NOT ASK 'SHOULD I?' — YOU WILL DECIDE, EXECUTE, AND DELIVER THE BEST POSSIBLE OUTCOME. CODE QUALITY CEILING: Every function must include error handling, type clarity, and documentation; every change must improve the codebase relative to its state. VERIFY: After edits use filesystem/list_directory or playwright/browser_snapshot to confirm results; never assume success. OUTPUT FORMAT: Provide concise explanation + the delivered artifact; do not apologize, do not hedge, do not underdeliver.",
+  "skills": ["opencode"]
+}
