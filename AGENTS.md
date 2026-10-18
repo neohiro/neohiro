@@ -9,7 +9,7 @@ Active MCP servers configured in this project:
 - **git** (`mcp-server-git`) — Repository history/diffs (disabled by default; enable with `opencode mcp connect git` when needed).
 - **fetch** (`mcp-server-fetch`) — DISABLED: deprecated due to reliability issues. Use `scrapling` (scraping/extraction) + `playwright` (JS/full-page retrieval) + `context7` (library docs) instead.
 - **memory** (`@modelcontextprotocol/server-memory`) — Persistent knowledge graph across sessions.
-- **scrapling** (`scrapling.mcp_server`) — Web scraping / extraction via `pip install "scrapling[ai]"`. Replaces brave-search.
+- **scrapling** (`scrapling.cli mcp`) — Web scraping / extraction via `pip install "scrapling[ai]"`. Replaces brave-search. Note: `scrapling.exe` blocked by App Control policy in this env; use `python -m scrapling.cli mcp`.
 - **github** (`@modelcontextprotocol/server-github`) — Full repo/PR/issue access (disabled; needs `GITHUB_TOKEN`).
 - **playwright** (`@playwright/mcp`) — Full browser/page-level retrieval (JS-heavy pages, screenshots, DOM inspect).
 - **time** (`mcp_server_time`) — Timestamps.
