@@ -1,0 +1,100 @@
+3851       // silently going dark — quality passes (improve/propose) still run.
+3852       if ((open.length > 0 || cbOpen > 0) && !s.budgetNotified) {
+3853         s.budgetNotified = true
+3854         notice(`${RESUME_TAG}: Drive-nudge budget (${cfg.maxNudges}) reached — pausing todo-drives. Self-improvement passes still run. Send a new prompt to refill.`, "warning")
+3855       }
+3856       return
+3857     }
+3858 
+3859     if (!errored && !hasContent && s.lastResumeAt) {
+3860       // Respond to consecutive empty turns (context compaction, streaming glitch, or
+3861       // a silent model).  Retry up to 3 times: the first two are a compact
+3862       // "empty" nudge; the third is an explicit "keep going" nudge that
+3863       // survives even if the model has nothing queued.  After that the nudges
+3864       // cap takes over so we don't spam indefinitely.
+3865       if (s.emptyNudges < 2) {
+3866         s.emptyNudges += 1
+3867         log("info", "empty response detected, nudging", { sessionID, emptyNudges: s.emptyNudges })
+3868         schedule(sessionID, cfg.nudgeDelayMs, { kind: "empty", prompt: PROMPTS.empty })
+3869       } else if (s.emptyNudges === 2 && s.nudges < cfg.maxNudges) {
+3870         s.emptyNudges += 1
+3871         log("info", "still empty after 2 nudges — explicit keep-going", { sessionID })
+3872         schedule(sessionID, cfg.nudgeDelayMs, { kind: "empty", prompt: PROMPTS.keepGoing })
+3873       }
+3874       // Mark the session as stuck; cleared by any content-bearing response so
+3875       // the flag doesn't poison the next idle evaluation after we recover.
+3876       s.emptyStreak = true
+3877     }
+3878 
+3879     // Failsafe: if the turn ended in any non-success way (empty, errored,
+3880     // fall-through), the improve cycle is no longer "in flight". Without this,
+3881     // a non-success end leaves the title pinned at 🧪 until the next task
+3882     // boundary — masking the actual state of the session. The success branch
+3883     // already cleared this above; this catches the errored/empty paths.
+3884     if (errored || !hasContent) s.improveActive = false
+3885     } finally {
+3886       s.evaluatingIdle = false
+3887     }
+3888   }
+3889 
+3890   // ── stall + stuck-retry watchdog ───────────────────────────────────
+3891   const takeover = (sessionID, why, noticeMsg, plan = { kind: "resume", prompt: PROMPTS.resume }) => {
+3892     const s = state(sessionID)
+3893     // The previous hard cap of `s.stallResumes >= 2` forced babysitting on
+3894     // long free-tier stalls once the model hit retry #3. Stall takeovers are
+3895     // now capped independently via `cfg.maxStallTakeovers` (env:
+3896     // OPENCODE_RESUME_MAX_STALL_TAKEOVERS, default 4) on top of the
+3897     // `maxChain` ceiling — both must allow a retry. chain can also be
+3898     // advanced by non-stall retries (e.g. 429 backoffs), so the two caps
+3899     // are orthogonal: stall path is bounded by maxStallTakeovers, aggregate
+3900     // path by maxChain.
+3901     if (s.chain >= cfg.maxChain || s.stallResumes >= cfg.maxStallTakeovers) return
+3902     s.stallResumes += 1
+3903     s.chain += 1
+3904     s.lastActivity = Date.now()
+3905     s.takeoverAt = Date.now() // our own abort — must not read as a user stop
+3906     s.retryEnteredAt = 0
+3907     s.retryNext = 0
+3908     log("warn", why, { sessionID })
+3909     notice(noticeMsg)
+3910     queueTitleRefresh(sessionID)
+3911     detach(async () => {
+3912       try { await client.session.abort({ path: { id: sessionID } }) } catch { /* already dead */ }
+3913       setTimeout(() => schedule(sessionID, TAKEOVER_SCHEDULE_DELAY_MS, plan), TAKEOVER_RETRY_DELAY_MS).unref?.()
+3914     }, "takeover-abort")
+3915   }
+3916   const checkStalls = () => {
+3917     const nowMs = Date.now()
+3918     // Periodic cleanup for dirAskCounts to prevent unbounded growth.
+3919     // Remove entries for sessions that no longer exist, and enforce max size.
+3920     if (dirAskCounts.size > 0) {
+3921       // Use dirAskCountsBySession for efficient per-session cleanup
+3922       for (const [sessionID, keySet] of dirAskCountsBySession) {
+3923         if (!sessions.has(sessionID)) {
+3924           for (const k of keySet) dirAskCounts.delete(k)
+3925           dirAskCountsBySession.delete(sessionID)
+3926         }
+3927       }
+3928       // If still over limit, remove oldest entries (first inserted).
+3929       if (cfg.maxDirAskCounts > 0 && dirAskCounts.size > cfg.maxDirAskCounts) {
+3930         const toRemove = dirAskCounts.size - cfg.maxDirAskCounts
+3931         let removed = 0
+3932         for (const k of dirAskCounts.keys()) {
+3933           if (removed >= toRemove) break
+3934           dirAskCounts.delete(k)
+3935           // Also remove from per-session index to prevent unbounded Set growth
+3936           const sid = k.split("|")[0]
+3937           const keySet = dirAskCountsBySession.get(sid)
+3938           if (keySet) {
+3939             keySet.delete(k)
+3940             if (keySet.size === 0) dirAskCountsBySession.delete(sid)
+3941           }
+3942           removed++
+3943         }
+3944         log("debug", "dirAskCounts size limit exceeded, removed oldest entries", { removed })
+3945       }
+3946     }
+3947 
+3948     // Health cache TTL cleanup: remove entries not updated in 30 days to prevent unbounded growth.
+3949     const HEALTH_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000
+3950     for (const [modelKey, entry] of providerHealthStore.map) {

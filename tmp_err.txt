@@ -1,0 +1,456 @@
+4045 // ── crash recovery: revive sessions killed by a server/machine restart ──
+4046 // Recovery timers live in the server process, so a crash orphans any turn
+4047 // that was mid-recovery or awaiting its first reply. On startup we scan
+4048 // recent sessions and give those a fresh continuation.
+4049 const reanimate = async (activeSessionsSnapshot = null) => {
+4050 await Promise.all([stopStore.load(), offStore.load(), pauseStore.load(), providerHealthStore.load()])
+4051 // On startup, use the snapshot captured before any events could modify the store.
+4052 // On server.connected (client restart), reload the store to get the latest state —
+4053 // the startup snapshot is stale and misses sessions that became active after startup.
+4054 if (!activeSessionsSnapshot) {
+4055 await activeSessionStore.load()
+4056 activeSessionsSnapshot = new Map()
+4057 for (const [id, ts] of activeSessionStore.map) {
+4058 activeSessionsSnapshot.set(id, ts)
+4059 }
+4060 }
+4061 if (!cfg.reanimate) return
+4062 let list = []
+4063 try {
+4064 const res = await client.session.list()
+4065 list = (res?.data ?? res) ?? []
+4066 } catch (err) {
+4067 log("warn", "reanimation scan failed", { err: err?.message ?? String(err) })
+4068 }
+4069 // Only revive sessions that exist in the current session list.
+4070 // The active store is only used to extend the revival window for sessions
+4071 // that are currently in the session list (not to add phantom sessions from
+4072 // previous test runs or stale data).
+4073 if (!Array.isArray(list)) return
+4074 const cutoff = Date.now() - cfg.reanimateWindowMs
+4075 const activeCutoff = Date.now() - RESTART_RECOVERY_WINDOW_MS
+4076 const activeList = [...list].sort((a, b) => (b.time?.updated ?? 0) - (a.time?.updated ?? 0)).slice(0, 50)
+4077 for (const sess of activeList) {
+4078 if (!sess?.id || sess.parentID) continue
+4079 if (typeof sess.id !== "string" || sess.id.length > 256) continue
+4080 if (suppressed(sess.id)) continue
+4081 const activeTs = activeSessionsSnapshot.get(sess.id)
+4082 const isActiveStore = typeof activeTs === "number" && activeTs > activeCutoff
+4083 if (!isActiveStore && (sess.time?.updated ?? 0) < cutoff) continue
+4084 const s = state(sess.id)
+4085 if (s.reanimated) continue
+4086 s.reanimated = true
+4087 
+4088 let entries = []
+4089 try {
+4090 const r = await Promise.race([
+4091 client.session.messages({ path: { id: sess.id } }),
+4092 new Promise((_, reject) => setTimeout(() => reject(new Error("messages fetch timeout")), 10_000))
+4093 ])
+4094 entries = (r?.data ?? r) ?? []
+4095 } catch { continue }
+4096 if (suppressed(sess.id)) continue
+4097 // Only revive sessions that have actual conversation history.
+4098 // Empty sessions (just created, no messages) should not be auto-prompted.
+4099 if (!entries.length) continue
+4100 const lastEntry = entries[entries.length - 1]
+4101 const lastInfo = lastEntry?.info
+4102 if (!lastInfo) continue
+4103 
+4104 resetTaskScope(s)
+4105 
+4106 // A prompt that never received any reply: the turn died at submission.
+4107 if (lastInfo.role === "user") {
+4108 if (suppressed(sess.id)) continue
+4109 log("info", "reanimating session with unanswered prompt", { sessionID: sess.id })
+4110 schedule(sess.id, TAKEOVER_RETRY_DELAY_MS, { kind: "resume", prompt: PROMPTS.resume })
+4111 notice(`${RESUME_TAG}: Revived a session interrupted by the restart.`)
+4112 continue
+4113 }
+4114 
+4115 const incomplete =
+4116 lastInfo.role === "assistant" &&
+4117 !lastInfo.error &&
+4118 typeof lastInfo.time === "object" &&
+4119 lastInfo.time !== null &&
+4120 !(lastInfo.time.completed > 0)
+4121 
+4122 if (lastInfo.role === "assistant" && (lastInfo.error || incomplete || isActiveStore)) {
+4123 let kind = lastInfo.error ? classify(lastInfo.error) : "interrupted"
+4124 if (kind === "abort") kind = "retryable"
+4125 if (["auth", "fatal", "overflow"].includes(kind)) continue
+4126 if (lastInfo.modelID) {
+4127 s.lastModel = { providerID: lastInfo.providerID, modelID: lastInfo.modelID }
+4128 }
+4129 if ((kind === "quota" || kind === "rate_limit") && cfg.rotationEnabled) {
+4130 await rotateAwayFrom(sess.id, "quota/rate limit (after restart)", true)
+4131 if (suppressed(sess.id)) continue
+4132 }
+4133 if (suppressed(sess.id)) continue
+4134 log("info", "reanimating previously active session after restart", { sessionID: sess.id, kind })
+4135 schedule(
+4136 sess.id,
+4137 TAKEOVER_RETRY_DELAY_MS,
+4138 kind === "output_length"
+4139 ? { kind: "continue", prompt: PROMPTS.truncated }
+4140 : { kind: "resume", prompt: `${RESUME_TAG} Client/server restarted. Re-animating previously active session. Reconstruct state from conversation + codebase and continue from exactly
+4141 )
+4142 notice(`${RESUME_TAG}: Revived previously active session after restart.`)
+4143 }
+4144 await new Promise((r) => setTimeout(r, 150))
+4145 }
+4146 restoreOptedOutTitles()
+4147 }
+4148 
+4149 
+4150 // -- self-updater: daily check against the official repo -------------------
+4151 let lastUpdateCheckAt = 0
+4152 let pendingUpdateNotice = null
+4153 let noticeDelivering = false
+4154 let lastNoticeTryAt = 0
+4155 let noticeAttempts = 0
+4156 let deliveryTimers = []
+4157 
+4158 /** Delivery of a one-shot update confirmation as a native OS notification —
+4159 *  the TUI toast channel no longer exists. The .acked marker commits only
+4160 *  after the OS notifier accepted the job, so failed attempts retry on the
+4161 *  next activity nudge (at most every 30s). Persistent failure (notifier-less
+4162 *  hosts) downgrades to debug after 3 tries so busy logs aren't flooded. */
+4163 const deliverPendingNotice = async () => {
+4164 if (!pendingUpdateNotice || noticeDelivering) return
+4165 if (Date.now() - lastNoticeTryAt < NOTICE_DELIVERY_RETRY_MS) return
+4166 noticeDelivering = true
+4167 try {
+4168 const n = pendingUpdateNotice
+4169 const { readFile, writeFile } = await import("node:fs/promises")
+4170 const current = (await readFile(n.ackPath, "utf8").catch(() => "")).trim()
+4171 if (current === AUTO_RESUME_VERSION) {
+4172 pendingUpdateNotice = null
+4173 for (const t of deliveryTimers.splice(0)) clearTimeout(t)
+4174 return
+4175 }
+4176 const osOk = await announce(n.message, { requireDelivery: true })
+4177 if (!osOk) throw new Error("OS notifier unavailable")
+4178 await writeFile(n.ackPath, AUTO_RESUME_VERSION, "utf8")
+4179 pendingUpdateNotice = null
+4180 for (const t of deliveryTimers.splice(0)) clearTimeout(t) // delivered: stop retry passes
+4181 log("info", "update notice delivered via OS notification")
+4182 } catch (err) {
+4183 lastNoticeTryAt = Date.now()
+4184 noticeAttempts += 1
+4185 log(noticeAttempts >= 3 ? "debug" : "warn",
+4186 "update notice delivery failed — retrying later", { err: err?.message ?? String(err) })
+4187 } finally {
+4188 noticeDelivering = false
+4189 }
+4190 }
+4191 
+4192 /** First sign of client life: settle briefly so the notifier stack is up,
+4193 *  then attempt delivery exactly once per arming. */
+4194 let noticeNudged = false
+4195 const nudgePendingNotice = () => {
+4196 if (!pendingUpdateNotice || noticeNudged) return
+4197 noticeNudged = true
+4198 const t = setTimeout(() => {
+4199 noticeNudged = false
+4200 detach(deliverPendingNotice, "notice-deliver")
+4201 }, 2_500)
+4202 t.unref?.()
+4203 }
+4204 const isNewerVersion = (remote, local) => {
+4205 const r = String(remote).split(".").map((x) => parseInt(x, 10) || 0)
+4206 const l = String(local).split(".").map((x) => parseInt(x, 10) || 0)
+4207 for (let i = 0; i < 3; i += 1) {
+4208 if ((r[i] || 0) !== (l[i] || 0)) return (r[i] || 0) > (l[i] || 0)
+4209 }
+4210 return false
+4211 }
+4212 const checkForUpdates = async () => {
+4213 if (!cfg.autoUpdate || !selfPath) return
+4214 if (Date.now() - lastUpdateCheckAt < 86_400_000) return
+4215 lastUpdateCheckAt = Date.now()
+4216 try {
+4217 const res = await fetch(`${UPDATE_URL}?t=${Date.now()}`, {
+4218 headers: { "user-agent": `auto-resume-plugin/${AUTO_RESUME_VERSION}` },
+4219 signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(15_000) : undefined,
+4220 })
+4221 if (!res.ok) return
+4222 const src = await res.text()
+4223 if (!src.startsWith("/**")) return // sanity: plausible release only
+4224 const match = src.match(/AUTO_RESUME_VERSION = "([^"]+)"/)
+4225 if (!match) return
+4226 if (!isNewerVersion(match[1], AUTO_RESUME_VERSION)) {
+4227 log("debug", "auto-resume up to date", { local: AUTO_RESUME_VERSION, remote: match[1] })
+4228 return
+4229 }
+4230 let current = ""
+4231 try {
+4232 const { readFile } = await import("node:fs/promises")
+4233 current = await readFile(selfPath, "utf8")
+4234 } catch { /* keep empty backup */ }
+4235 await writeFile(`${selfPath}.bak`, current, "utf8")
+4236 const tmp = `${selfPath}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`
+4237 try {
+4238 await writeFile(tmp, src, "utf8")
+4239 await rename(tmp, selfPath)
+4240 } finally {
+4241 // Self-updater renamed its tmp into place — drop the tmp now so a
+4242 // successful update doesn't leak a unique-suffix file next to the
+4243 // plugin. Windows locks on a freshly-written file can transiently
+4244 // fail unlink; that's fine, it self-cleans on the next update.
+4245 try { await unlink(tmp) } catch { /* best effort */ }
+4246 }
+4247 log("info", "self-updated", { from: AUTO_RESUME_VERSION, to: match[1], path: selfPath })
+4248 // Update completed → user-facing channels: an OpenCode log entry plus a
+4249 // native OS notification (works even when no client window is open).
+4250 detach(() =>
+4251 announce(
+4252 `${RESUME_TAG}: Updated ${AUTO_RESUME_VERSION} -> ${match[1]}. Restart OpenCode to load it.`,
+4253 { title: "auto-resume updated", event: "update-applied" },
+4254 ), "milestone-announce")
+4255 } catch (err) {
+4256 log("debug", "update check skipped", { err: err?.message ?? String(err) })
+4257 }
+4258 }
+4259 if (cfg.enabled) {
+4260 const wd = setInterval(() => detach(checkStalls, "watchdog"), cfg.watchdogMs)
+4261 wd.unref?.()
+4262 const upd = setInterval(() => detach(checkForUpdates, "update-check"), 3_600_000)
+4263 upd.unref?.()
+4264 // Track active timers for cleanup
+4265 const activeIntervals = [wd, upd]
+4266 const activeTimeouts = [...deliveryTimers]
+4267 // Cleanup function for graceful shutdown
+4268 const cleanup = () => {
+4269 for (const t of activeIntervals) clearInterval(t)
+4270 for (const t of activeTimeouts) clearTimeout(t)
+4271 // Cancel all pending scheduled work so nothing fires after shutdown.
+4272 for (const t of timers.values()) { try { clearTimeout(t) } catch { /* ignore */ } }
+4273 timers.clear()
+4274 for (const t of titleTimers.values()) { try { clearTimeout(t) } catch { /* ignore */ } }
+4275 titleTimers.clear()
+4276 for (const s of sessions.values()) {
+4277 if (s?.rearmTimer) { clearTimeout(s.rearmTimer); s.rearmTimer = null }
+4278 if (s?.compactionTimer) { clearTimeout(s.compactionTimer); s.compactionTimer = null }
+4279 }
+4280 // Save any pending stores
+4281 stopStore.save().catch(() => {})
+4282 offStore.save().catch(() => {})
+4283 pauseStore.save().catch(() => {})
+4284 activeSessionStore.save().catch(() => {})
+4285 providerHealthStore.save().catch(() => {})
+4286 // Flush any pending telemetry
+4287 flushTelemetry()
+4288 if (telemetryFlushTimer) clearTimeout(telemetryFlushTimer)
+4289 }
+4290 // Attach cleanup to process signals for graceful shutdown (listeners
+4291 // attached once per process; see armShutdownHooks).
+4292 shutdownCleanups.push(cleanup)
+4293 armShutdownHooks()
+4294 // Also expose cleanup on the plugin for external callers
+4295 globalThis.__autoResumeCleanup = cleanup
+4296 
+4297 detach(() => log("info", `auto-resume v${AUTO_RESUME_VERSION} initialized`), "init-log")
+4298 detach(pauseStore.load, "pause-store-load")
+4299 detach(stopStore.load, "stop-store-load")
+4300 detach(offStore.load, "off-store-load")
+4301 detach(providerHealthStore.load, "provider-health-store-load")
+4302 detach(activeSessionStore.load, "active-session-store-load")
+4303 detach(async () => {
+4304 await Promise.all([stopStore.load(), offStore.load(), pauseStore.load(), providerHealthStore.load(), activeSessionStore.load()])
+4305 restoreOptedOutTitles()
+4306 }, "optout-title-restore")
+4307 detach(checkForUpdates, "update-check")
+4308 // One-shot update confirmations are delivered as native OS notifications:
+4309 // a short settle delay after init avoids racing server startup, then the
+4310 // first session/message activity, a server.connected event, or an 15s
+4311 // fallback re-attempt failed deliveries.
+4312 if (cfg.autoUpdate) {
+4313 detach(async () => {
+4314 if (!selfPath) return
+4315 try {
+4316 const { readFile } = await import("node:fs/promises")
+4317 const ackPath = `${selfPath}.acked`
+4318 const acked = (await readFile(ackPath, "utf8").catch(() => "")).trim()
+4319 if (acked === AUTO_RESUME_VERSION) return
+4320 pendingUpdateNotice = {
+4321 ackPath,
+4322 message: `${RESUME_TAG}: Now running v${AUTO_RESUME_VERSION}${acked ? ` (previously ${acked})` : ""} — update fully applied.`,
+4323 }
+4324 // Deliberately REF'D (no unref): these timers are the delivery
+4325 // mechanism for a milestone the ack protocol must not lose. Bun
+4326 // has been observed never firing unref'd timers once the host
+4327 // loop goes quiet — exactly when a headless CI test waits on them.
+4328 // deliverPendingNotice clears both once the notice resolves.
+4329 const timers = [
+4330 setTimeout(() => detach(deliverPendingNotice, "notice-deliver"), 800),
+4331 setTimeout(() => detach(deliverPendingNotice, "notice-fallback"), OS_NOTIFICATION_TIMEOUT_MS),
+4332 ]
+4333 deliveryTimers = timers
+4334 activeTimeouts.push(...timers)
+4335 } catch { /* cosmetic only */ }
+4336 }, "update-notice")
+4337 }
+4338 // Snapshot active sessions from PREVIOUS run BEFORE any events can modify the store.
+4339 // This ensures we only revive sessions that were active before the restart.
+4340 startupActiveSnapshot = new Map()
+4341 try {
+4342 await activeSessionStore.load()
+4343 for (const [id, ts] of activeSessionStore.map) {
+4344 startupActiveSnapshot.set(id, ts)
+4345 }
+4346 } catch { /* ignore */ }
+4347 // Run reanimation with the snapshot
+4348 await reanimate(startupActiveSnapshot)
+4349 // Deferred reanimation: server may not have populated session list yet.
+4350 // Retry after a random delay (1s-5s) to stagger requests and catch asynchronously loaded sessions.
+4351 const staggerMs = Math.floor(Math.random() * 4000) + 1000
+4352 setTimeout(() => detach(reanimate, "reanimate-deferred"), staggerMs).unref?.()
+4353 } else {
+4354 console.warn(`${RESUME_TAG} disabled via OPENCODE_RESUME_ENABLED`)
+4355 }
+4356 
+4357 return {
+4358 /* Bridge for the V2 adapter. Not a V1 hook name — V1 core only reads the
+4359 * keys it knows (event, tool, chat.*, permission.ask, ...), so an extra
+4360 * property is inert there. It exists so ctx.permission.hook("evaluate")
+4361 * can reuse the exact same decision logic (safe-mode rules, cross-OS
+4362 * deny-list, escalation counters) instead of duplicating it on the V2
+4363 * side. Returns null when the autopilot should not decide (disabled,
+4364 * opted out, safe-mode unlisted type), meaning "leave this to the human". */
+4365 __evaluatePermission: (sessionID, request) => {
+4366 const perm = v2PermissionToV1({
+4367 ...request,
+4368 action: request?.action,
+4369 resources: Array.isArray(request?.resources) ? request.resources : [],
+4370 metadata: request?.metadata,
+4371 sessionID,
+4372 })
+4373 if (suppressed(sessionID)) return null
+4374 const decision = decidePermission(sessionID, perm)
+4375 if (!decision) return null
+4376 return {
+4377 effect: decision === "reject" ? "deny" : "allow",
+4378 reply: decision,
+4379 type: permTypeOf(perm),
+4380 }
+4381 },
+4382 event: async (input) => {
+4383 if (!cfg.enabled) return
+4384 const event = input && typeof input === "object" ? input.event : null
+4385 if (!event || typeof event.type !== "string") return
+4386 try {
+4387 const type = event.type
+4388 const p = event.properties ?? {}
+4389 
+4390 switch (type) {
+4391 case "session.error": {
+4392 if (p.sessionID) recordActiveSession(p.sessionID)
+4393 if (p.sessionID && p.error) detach(handleError(p.sessionID, p.error), "handleError")
+4394 break
+4395 }
+4396 
+4397 case "message.updated": {
+4398 nudgePendingNotice()
+4399 const info = p.info
+4400 if (!info?.sessionID) break
+4401 recordActiveSession(info.sessionID)
+4402 state(info.sessionID).lastActivity = Date.now()
+4403 
+4404 if (info.role === "user") {
+4405 // Fresh task boundary — unless it's OUR own injected prompt.
+4406 // UserMessage carries no parts in this event, so verify by
+4407 // fetching the stored message text and matching our tag.
+4408 const s0 = state(info.sessionID)
+4409 let ours = false
+4410 let userText = ""
+4411 if (info.id) {
+4412 try {
+4413 const res = await client.session.message({
+4414 path: { id: info.sessionID, messageID: info.id },
+4415 })
+4416 const data = res?.data ?? res
+4417 userText = (data?.parts ?? [])
+4418 .map((x) => (x?.type === "text" ? x.text : "")).join(" ")
+4419 ours = userText.includes(RESUME_TAG)
+4420 } catch { ours = false }
+4421 }
+4422 // In-chat switch: exactly "auto-resume off" / "auto-resume on"
+4423 // (leading "/" allowed). Short exact match so prose never trips it.
+4424 const toggleCmd = /^\/?auto[- ]?resume[ :]?(off|on|pause)[.!]?\s*$/i.exec(userText.trim())
+4425 if (toggleCmd) {
+4426 handleToggleCommand(info.sessionID, toggleCmd[1].toLowerCase())
+4427 break
+4428 }
+4429 if (!ours) {
+4430 // Cancel any plugin-injected plan that was queued before this user
+4431 // prompt arrived — the new conversation must not be polluted by
+4432 // a stale "Continue" / "Auto-resume" that fires seconds later.
+4433 cancelPending(info.sessionID, "user prompt arrived")
+4434 sessionErrorSynthLock.delete(info.sessionID)
+4435 // A REAL prompt starts a new workflow — lift the stop, on
+4436 // disk too, so future runs automate this session again.
+4437 // (An explicit opt-out is only lifted by "auto-resume on".)
+4438 if (persistedStops.delete(info.sessionID)) stopStore.save()
+4439 // Follow-up detection: if all todos are already complete (or
+4440 // the no-todo autopilot has already fired for this session)
+4441 // and the improve-cooldown hasn't elapsed yet, preserve
+4442 // improve counters so improvement passes don't re-trigger on
+4443 // the same topic.  Once the cooldown expires, reset
+4444 // everything so new work gets a fresh improvement cycle.
+4445 const todos = s0.todos ?? []
+4446 const allDone = todos.length > 0 &&
+4447 todos.every((t) => t.status === "completed" || t.status === "cancelled")
+4448 const cooldownElapsed = !s0.lastImprovedAt ||
+4449 (cfg.improveCooldownMs !== 0 && Date.now() - s0.lastImprovedAt >= cfg.improveCooldownMs)
+4450 const followUp = (allDone || s0.noTodoImproveFired) && !cooldownElapsed
+4451 resetTaskScope(s0, { followUp })
+4452 s0.currentModel = null
+4453 s0.emptyNudges = 0
+4454 s0.emptyStreak = false
+4455 queueTitleRefresh(info.sessionID)
+4456 }
+4457 s0.lastTurnHadText = false // new turn begins
+4458 break
+4459 }
+4460 // Fallback reanimation on first session activity: catches initial
+4461 // startup when server.connected doesn't fire or fires before sessions load.
+4462 if (firstSessionActivity && cfg.reanimate) {
+4463 firstSessionActivity = false
+4464 if (Date.now() - lastReanimateAt > REANIMATE_SCAN_INTERVAL_MS) {
+4465 lastReanimateAt = Date.now()
+4466 detach(reanimate, "reanimate-activity")
+4467 }
+4468 }
+4469 // Capture model + spend from assistant messages.
+4470 if (info.role === "assistant") {
+4471 const s = state(info.sessionID)
+4472 if (info.modelID) {
+4473 const seen = { providerID: info.providerID, modelID: info.modelID }
+4474 s.originalModel = s.originalModel ?? seen
+4475 s.lastModel = seen
+4476 }
+4477 /* Accumulate spend against the per-task cost cap
+4478 * (OPENCODE_AUTOPILOT_MAX_COST_USD).
+4479 *
+4480 * This used to never happen: taskCost was initialised to 0 and
+4481 * compared against the cap, but nothing ever added to it, so the
+4482 * cap could not trip and the "paused - cost cap" title state and
+4483 * the cap notice were unreachable. Accumulate on the assistant
+4484 * message, which is where the provider reports turn cost.
+4485 *
+4486 * Guarded because message.updated can be re-delivered: count a
+4487 * given message once, or a re-render inflates the total and halts
+4488 * a healthy task. */
+4489 const cost = Number(info.cost)
+4490 if (Number.isFinite(cost) && cost > 0) {
+4491 // Bounded: one id per assistant message would grow for the
+4492 // life of the process. Re-delivery is always of the same
+4493 // (most recent) message, so a short window is sufficient.
+4494 if (!s.countedCostMessageIds) s.countedCostMessageIds = []
+4495 const costMsgID = info.id
+4496 if (!costMsgID || !s.countedCostMessageIds.includes(costMsgID)) {
+4497 if (costMsgID) {
+4498 s.countedCostMessageIds.push(costMsgID)
+4499 if (s.countedCostMessageIds.length > 16) s.countedCostMessageIds.shift()
+4500 }

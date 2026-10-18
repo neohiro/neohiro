@@ -1,0 +1,10 @@
+20 *  speaks (`ctx.session.prompt({ sessionID, text })`,
+1974 // Clear lastEvalSig so that evaluateIdle will re-process the last
+2708 *  exist in the OpenCode SDK — the session surface is `session.prompt` —
+3578 const evaluateIdle = async (sessionID) => {
+4564 // evaluateIdle deduplicates via lastEvalSig, but we skip here
+4576 detach(evaluateIdle(p.sessionID), "evaluateIdle")
+4778 *     plugin context (`ctx.session.prompt({ sessionID, text })`,
+4933 *    session.prompt()        → ctx.session.prompt({ sessionID, text })
+5195 return unwrap(await ctx.session.prompt(payload))
+5342 // idle is cancelled, so an evaluateIdle never fires mid-turn.

@@ -1,0 +1,5 @@
+3632 
+3633 const hasContent = (lastAssistant.parts ?? []).some((p) => ["text", "tool", "reasoning"].includes(p?.type))
+3634 const errored = Boolean(info.error)
+3635 
+3636 /* Provider safety filter stopped the turn. OpenCode 2 reports this as an

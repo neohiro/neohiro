@@ -1,0 +1,12 @@
+3076 // Dedupe only the SAME incident (session.error + message.updated both fire);
+3599 // stopped by a concurrent session.error handler while we were waiting.
+3620 // Stop-button presses that never raised session.error still leave a
+4391 case "session.error": {
+5319 * and NOT ONE of session.error / session.idle / session.status /
+5474 synth("session.error", { sessionID, error: normalized })
+5499 synth("session.error", {
+5597 synth("session.error", { sessionID, error: normalized })
+5634 if (type === "session.error") {
+5739 * newest assistant turn carries back to the engine as a session.error.
+5756 const lastErrorSynthAt = new Map() // sessionID -> timestamp of last synthesized session.error
+5825 synth("session.error", { sessionID, error: v2ErrorToV1(info.error) })

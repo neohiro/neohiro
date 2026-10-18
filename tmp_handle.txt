@@ -1,0 +1,2 @@
+3058 const handleError = async (sessionID, error) => {
+4393 if (p.sessionID && p.error) detach(handleError(p.sessionID, p.error), "handleError")

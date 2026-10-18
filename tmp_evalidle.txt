@@ -1,0 +1,311 @@
+3577 
+3578   const evaluateIdle = async (sessionID) => {
+3579     const s = state(sessionID)
+3580     if (s.evaluatingIdle) return
+3581     s.evaluatingIdle = true
+3582     try {
+3583     if (suppressed(sessionID)) { s.awaitingCompactionSince = 0; return }
+3584     const relevant =
+3585       s.lastErrorName || s.lastResumeAt || s.continueCount ||
+3586       s.todos.length || s.lastTurnHadText
+3587     s.awaitingCompactionSince = 0
+3588     if (!relevant) return
+3589     // any engaged session shows its indicator while auto-resume is enabled
+3590     queueTitleRefresh(sessionID)
+3591 
+3592     let entries = []
+3593     try {
+3594       const res = await client.session.messages({ path: { id: sessionID } })
+3595       entries = (res?.data ?? res) ?? []
+3596     } catch { return }
+3597 
+3598     // Re-check suppression after the async fetch — the session may have been
+3599     // stopped by a concurrent session.error handler while we were waiting.
+3600     if (suppressed(sessionID)) return
+3601 
+3602     let lastAssistant = null
+3603     for (let i = entries.length - 1; i >= 0; i -= 1) {
+3604       if (entries[i]?.info?.role === "assistant") { lastAssistant = entries[i]; break }
+3605     }
+3606     if (!lastAssistant) return
+3607 
+3608     // session.status(idle) and session.idle fire for the SAME turn end —
+3609     // evaluate each finished turn exactly once, keyed by its last message.
+3610     const turnSig = `${lastAssistant.info?.id ?? ""}:${(lastAssistant.parts ?? []).length}`
+3611     if (turnSig && turnSig === s.lastEvalSig) return
+3612     s.lastEvalSig = turnSig
+3613 
+3614     const info = lastAssistant.info
+3615     if (info.modelID && !s.currentModel) {
+3616       s.lastModel = { providerID: info.providerID, modelID: info.modelID }
+3617       s.originalModel = s.originalModel ?? s.lastModel
+3618     }
+3619 
+3620     // Stop-button presses that never raised session.error still leave a
+3621     // MessageAbortedError on the stored assistant message — honor those too.
+3622     if (isAbortError(info.error)) {
+3623       if (!isOwnTakeoverAbort(s)) {
+3624         markUserStopped(sessionID, "assistant message carries an abort error")
+3625       }
+3626       // Aborted improve cycle: the cycle is no longer "in flight" regardless
+3627       // of the stop origin (user or our own takeover). Clearing the flag here
+3628       // prevents the title from being stuck at 🧪 until the next task reset.
+3629       s.improveActive = false
+3630       return
+3631     }
+3632 
+3633     const hasContent = (lastAssistant.parts ?? []).some((p) => ["text", "tool", "reasoning"].includes(p?.type))
+3634     const errored = Boolean(info.error)
+3635 
+3636     /* Provider safety filter stopped the turn. OpenCode 2 reports this as an
+3637      * explicit finish reason rather than burying it in an error string, so it
+3638      * is detectable without guessing. It needs its own message: every other
+3639      * recovery prompt tells the model to *continue*, but a filtered reply will
+3640      * be filtered again verbatim. The correct remedy is to reframe, or to skip
+3641      * the blocked part and finish everything else — so drive that directly
+3642      * instead of letting the generic success/empty paths decide. */
+3643     if (info.finish === "content-filter" && cfg.autonomy && s.contentFilterFired !== info.id) {
+3644       s.contentFilterFired = info.id
+3645       log("warn", "turn stopped by provider content filter", { sessionID, messageID: info.id })
+3646       if (s.nudges < cfg.maxNudges && budgetLeft(s)) {
+3647         s.nudges += 1
+3648         s.chain = 0
+3649         schedule(sessionID, cfg.nudgeDelayMs, { kind: "contentFilter", prompt: PROMPTS.contentFilter })
+3650         return
+3651       }
+3652       notice(`${RESUME_TAG}: Provider content filter blocked the last reply — finishing around it.`, "warning")
+3653       return
+3654     }
+3655 
+3656     if (!errored && hasContent) {
+3657       noteSuccess()
+3658       const curKey = s.currentModel ?? s.lastModel
+3659       if (curKey) recordHealth(modelKey(curKey), true)
+3660       // A clean turn supersedes any recovery still waiting to fire: without
+3661       // this, error→scheduled resume + core's own successful retry produced
+3662       // spurious "transient infrastructure error" prompts on healthy turns.
+3663       s.lastSuccessAt = Date.now()
+3664       s.toolErrs = 0
+3665       s.gaveUpRearmed = false
+3666       s.budgetNotified = false
+3667       s.lowBudgetStreak = 0; s.lowBudgetSig = null; s.lowBudgetLastFired = false
+3668       s.lowBudgetPending = false
+3669       s.emptyStreak = false  // recovered — clear the empty-loop latch
+3670       s.askingSince = null
+3671       // A clean turn is the evidence that the alternate is working. Count it
+3672       // toward the favorite-return stability gate.
+3673       if (s.favoriteRotatedAt) s.turnsSinceRotation += 1
+3674 
+3675       // Self-improvement: a clean turn closes out the in-flight improve
+3676       // cycle. If that was the LAST scheduled cycle, latch improvedAt so the
+3677       // title shows ✅ for a short window before settling to armed/idle.
+3678       if (s.improveActive) {
+3679         s.improveActive = false
+3680         if (s.improveDone >= cfg.improveCycles) s.improvedAt = Date.now()
+3681       }
+3682 
+3683       const todos = s.todos ?? []
+3684       const open = todos.filter((t) => t.status === "pending" || t.status === "in_progress")
+3685       const finished = todos.filter((t) => t.status === "completed" || t.status === "cancelled")
+3686 
+3687       // Implicit todo lists: markdown checkboxes in the assistant's own reply
+3688       // count as a todo list even when the todo tool was never used.
+3689       const replyText = (lastAssistant.parts ?? [])
+3690         .map((x) => (x?.type === "text" ? x.text : "")).join(" ")
+3691       let boxes = [...replyText.matchAll(CHECKBOX_RE)]
+3692       let cbOpen = boxes.filter((m) => m[1] !== "x" && m[1] !== "X").length
+3693       let cbDone = boxes.length - cbOpen
+3694 
+3695       // OpenCode 2 dropped the todo tool and the todo.updated event, so a V2
+3696       // model has no structured task list. When the newest reply carries no
+3697       // checklist, fall back to the most recent plan the model wrote earlier in
+3698       // the conversation — otherwise a plan stated a few turns ago silently
+3699       // stops driving continuation the moment the next reply is a short
+3700       // confirmation. Tool-backed todos (V1 cores) always take precedence, so
+3701       // existing behaviour is unchanged where the structured list exists.
+3702       if (todos.length === 0 && boxes.length === 0) {
+3703         const plan = latestPlanFromMessages(entries)
+3704         if (plan && plan.open > 0) {
+3705           cbOpen = plan.open
+3706           cbDone = plan.done
+3707           boxes = new Array(plan.total).fill("[ ]")
+3708         }
+3709       }
+3710 
+3711       // The agent ended its turn by asking a question or announcing more
+3712       // work ("Continue to finalize.") instead of finishing — keep it going.
+3713       if (open.length === 0 && s.lastInjectKind !== "propose" && cfg.autonomy && cfg.proceedOnAsk &&
+3714           s.proceedCount < cfg.maxProceeds && s.nudges < cfg.maxNudges && budgetLeft(s)) {
+3715         if (replyText && replyText.trim()) {
+3716           const asked = QUESTION_PATTERNS.some((re) => re.test(replyText))
+3717           const stubbed = looksLikeContinuationStub(replyText) || looksLikeContinuationLong(replyText)
+3718           // "Which of these do you want me to tackle first?" / "Should I tackle
+3719           // proposal 2?" / "Want me to do all of them?" / "draft a SPEC for X" —
+3720           // these are proposal-list / defer-to-user questions. Different from a
+3721           // simple yes/no proceed: the user wants unattended execution of N items,
+3722           // so fire a stronger "do all, step-by-step" prompt instead of the
+3723           // generic proceed nudge.
+3724           const proposalList = /\b(which (of these|one)|tackle (first|proposal)|do all\b|implement all\b|all of them|draft a spec|write a spec)\b/i.test(replyText)
+3725           if (asked || stubbed) {
+3726             s.proceedCount += 1
+3727             s.nudges += 1
+3728             // The ❓ "asking" glyph is reserved for actual question turns —
+3729             // stubs ("Continue to finalize.") aren't a question, the user
+3730             // isn't being asked anything. Setting askingSince for a stub
+3731             // would mislead the user into thinking the model is waiting on
+3732             // them. The notice is already gated to `asked` only.
+3733             if (asked) s.askingSince = Date.now()
+3734             log("info",
+3735               proposalList ? "agent asked a proposal-list question — proceeding to do all" :
+3736               asked ? "agent asked a question — proceeding autonomously" :
+3737               "agent announced continuation but stopped — resuming",
+3738               { sessionID })
+3739             if (asked) {
+3740               notice(`${RESUME_TAG}: model asked — answering autonomously.`, "info")
+3741             }
+3742             schedule(sessionID, cfg.nudgeDelayMs, {
+3743               kind: "proceed",
+3744               prompt: proposalList ? PROMPTS.proceedAll : (asked ? PROMPTS.proceed : PROMPTS.keepGoing),
+3745             })
+3746             return
+3747           }
+3748         }
+3749       }
+3750 
+3751       // Full completion → self-improvement passes → wrap-up proposals → notice
+3752       if ((todos.length > 0 || boxes.length > 0) && open.length === 0 && cbOpen === 0) {
+3753         // Quality passes are EXEMPT from the shared nudge budget: they have
+3754         // their own hard caps (improveCycles / proposalSent), and burning the
+3755         // drive budget must never silence final-quality passes on long runs.
+3756         if (cfg.autonomy && cfg.improveLoop && s.improveDone < cfg.improveCycles
+3757             && s.improveTotal < cfg.improveMax && budgetLeft(s)) {
+3758           const cycle = s.improveDone + 1
+3759           s.improveDone = cycle
+3760           s.improveTotal += 1
+3761           s.lastImprovedAt = Date.now()
+3762           s.improveActive = true
+3763           s.nudges += 1
+3764           log("info", "improvement pass", { sessionID, cycle: `${cycle}/${cfg.improveCycles}` })
+3765           schedule(sessionID, cfg.nudgeDelayMs, {
+3766             kind: "improve",
+3767             prompt: () => PROMPTS.improve(cycle, cfg.improveCycles),
+3768           })
+3769           return
+3770         }
+3771         if (cfg.autonomy && cfg.proposals && !s.proposalSent && budgetLeft(s)) {
+3772           s.proposalSent = true
+3773           s.nudges += 1
+3774           schedule(sessionID, cfg.nudgeDelayMs, { kind: "propose", prompt: PROMPTS.propose })
+3775           return
+3776         }
+3777         notice(`${RESUME_TAG}: Task list complete. ✅`, "success")
+3778         return
+3779       }
+3780 
+3781       // No-todo autopilot: many LLMs (cheap/free routers, smaller open-source
+3782       // models, fast inference endpoints) never call the todo tool and never
+3783       // emit markdown checkboxes. Without this branch the entire subsystem 4
+3784       // (self-improvement + wrap-up proposals) silently skips their sessions.
+3785       // We still require (a) substantive text output, (b) no pending todos /
+3786       // boxes, and (c) a clean (non-error) turn — same safety rails as the
+3787       // todo-driven path — and gate behind the same improve caps/budget so
+3788       // a no-todo session never gets more autonomy than a structured one.
+3789       const noTodos = todos.length === 0 && boxes.length === 0
+3790       // Honour the same cooldown + proposalSent latches as the todo path so a
+3791       // single follow-up question can't instantly re-trigger the loop.
+3792       const cooldownOk = !s.lastImprovedAt ||
+3793         (cfg.improveCooldownMs === 0) ||
+3794         (Date.now() - s.lastImprovedAt >= cfg.improveCooldownMs)
+3795       if (noTodos && !s.noTodoImproveFired && !s.proposalSent && cooldownOk
+3796           && s.lastInjectKind !== "improve" && s.lastInjectKind !== "propose"
+3797           && cfg.autonomy && cfg.improveLoop
+3798           && s.improveDone < cfg.improveCycles && s.improveTotal < cfg.improveMax
+3799           && budgetLeft(s)) {
+3800         const text = (lastAssistant.parts ?? [])
+3801           .map((x) => (x?.type === "text" ? x.text : "")).join(" ").trim()
+3802         // Only fire when the model actually delivered answer-shaped text, so
+3803         // trivial acks / single-line tool echoes don't trigger a critique pass.
+3804         if (text.length >= 80) {
+3805           const cycle = s.improveDone + 1
+3806           s.improveDone = cycle
+3807           s.improveTotal += 1
+3808           s.lastImprovedAt = Date.now()
+3809           s.improveActive = true
+3810           s.nudges += 1
+3811           s.noTodoImproveFired = true
+3812           log("info", "no-todo autopilot: improvement pass on a non-todo model", {
+3813             sessionID, cycle: `${cycle}/${cfg.improveCycles}`, chars: text.length,
+3814           })
+3815           schedule(sessionID, cfg.nudgeDelayMs, {
+3816             kind: "improve",
+3817             prompt: () => PROMPTS.improve(cycle, cfg.improveCycles),
+3818           })
+3819           return
+3820         }
+3821       }
+3822 
+3823       // Unfinished todos → drive continuation (with spin detection + caps)
+3824       // Spin detection tracks progress SINCE THE LAST NUDGE, not total progress.
+3825       // This prevents false "progress" when the model completes unrelated todos
+3826       // between nudges without actually addressing the stuck items.
+3827       if (cfg.autonomy && cfg.todoDrive && (open.length > 0 || cbOpen > 0) &&
+3828           s.nudges < cfg.maxNudges && budgetLeft(s)) {
+3829         const doneNow = finished.length + cbDone
+3830         // Compare against completed count at last nudge (or initial -1)
+3831         const baseline = s.lastNudgeCompletedCount >= 0 ? s.lastNudgeCompletedCount : doneNow
+3832         if (doneNow === baseline) {
+3833           s.staleDrives += 1
+3834         } else {
+3835           s.staleDrives = 0
+3836         }
+3837         if (s.staleDrives < 2) {
+3838           s.nudges += 1
+3839           s.driveCount += 1
+3840           // Record completed count AT THE TIME OF THIS NUDGE for next comparison
+3841           s.lastNudgeCompletedCount = doneNow
+3842           log("info", "todo-drive nudge", { sessionID, open: open.length + cbOpen, drive: s.driveCount })
+3843           schedule(sessionID, cfg.nudgeDelayMs, { kind: "todos", prompt: PROMPTS.todos })
+3844           return
+3845         }
+3846         log("warn", "todo-drive stopped: no progress across nudges", { sessionID })
+3847         notice(`${RESUME_TAG}: Todos stalled without progress — stopping auto-drive.`, "warning")
+3848         return
+3849       }
+3850       // Nudge budget exhausted on drives/proceeds: say so ONCE instead of
+3851       // silently going dark — quality passes (improve/propose) still run.
+3852       if ((open.length > 0 || cbOpen > 0) && !s.budgetNotified) {
+3853         s.budgetNotified = true
+3854         notice(`${RESUME_TAG}: Drive-nudge budget (${cfg.maxNudges}) reached — pausing todo-drives. Self-improvement passes still run. Send a new prompt to refill.`, "warning")
+3855       }
+3856       return
+3857     }
+3858 
+3859     if (!errored && !hasContent && s.lastResumeAt) {
+3860       // Respond to consecutive empty turns (context compaction, streaming glitch, or
+3861       // a silent model).  Retry up to 3 times: the first two are a compact
+3862       // "empty" nudge; the third is an explicit "keep going" nudge that
+3863       // survives even if the model has nothing queued.  After that the nudges
+3864       // cap takes over so we don't spam indefinitely.
+3865       if (s.emptyNudges < 2) {
+3866         s.emptyNudges += 1
+3867         log("info", "empty response detected, nudging", { sessionID, emptyNudges: s.emptyNudges })
+3868         schedule(sessionID, cfg.nudgeDelayMs, { kind: "empty", prompt: PROMPTS.empty })
+3869       } else if (s.emptyNudges === 2 && s.nudges < cfg.maxNudges) {
+3870         s.emptyNudges += 1
+3871         log("info", "still empty after 2 nudges — explicit keep-going", { sessionID })
+3872         schedule(sessionID, cfg.nudgeDelayMs, { kind: "empty", prompt: PROMPTS.keepGoing })
+3873       }
+3874       // Mark the session as stuck; cleared by any content-bearing response so
+3875       // the flag doesn't poison the next idle evaluation after we recover.
+3876       s.emptyStreak = true
+3877     }
+3878 
+3879     // Failsafe: if the turn ended in any non-success way (empty, errored,
+3880     // fall-through), the improve cycle is no longer "in flight". Without this,
+3881     // a non-success end leaves the title pinned at 🧪 until the next task
+3882     // boundary — masking the actual state of the session. The success branch
+3883     // already cleared this above; this catches the errored/empty paths.
+3884     if (errored || !hasContent) s.improveActive = false
+3885     } finally {
+3886       s.evaluatingIdle = false
+3887     }
