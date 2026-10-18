@@ -7,9 +7,9 @@ Active MCP servers configured in this project:
 - **sequential-thinking** (`@modelcontextprotocol/server-sequential-thinking`) — Structured step-by-step reasoning for complex problems.
 - **everything** (`@modelcontextprotocol/server-everything`) — General reference/test tools.
 - **git** (`mcp-server-git`) — Repository history/diffs (disabled by default; enable with `opencode mcp connect git` when needed).
-- **fetch** (`mcp-server-fetch`) — DISABLED: deprecated due to reliability issues. Use `brave-search` (live web/search) + `playwright` (JS/full-page retrieval) + `context7` (library docs) instead.
+- **fetch** (`mcp-server-fetch`) — DISABLED: deprecated due to reliability issues. Use `scrapling` (scraping/extraction) + `playwright` (JS/full-page retrieval) + `context7` (library docs) instead.
 - **memory** (`@modelcontextprotocol/server-memory`) — Persistent knowledge graph across sessions.
-- **brave-search** (`@brave/brave-search-mcp-server`) — Real-time web/local search (needs `BRAVE_API_KEY`).
+- **scrapling** (`scrapling.mcp_server`) — Web scraping / extraction via `pip install "scrapling[ai]"`. Replaces brave-search.
 - **github** (`@modelcontextprotocol/server-github`) — Full repo/PR/issue access (disabled; needs `GITHUB_TOKEN`).
 - **playwright** (`@playwright/mcp`) — Full browser/page-level retrieval (JS-heavy pages, screenshots, DOM inspect).
 - **time** (`mcp_server_time`) — Timestamps.
