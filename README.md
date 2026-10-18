@@ -41,7 +41,7 @@
 ### 📊 GitHub stats
 
 <p align="center">
-  <a href="https://neohiro.github.io"><img src="stats.svg" alt="GitHub stats and top languages" width="100%" /></a>
+  <a href="https://neohiro.github.io" aria-label="GitHub stats and languages" title="Personal site and stats"><img src="stats.svg" alt="GitHub stats and top languages" width="100%" /></a>
 </p>
 
 ### 🔗 Links
@@ -49,14 +49,14 @@
 <table width="100%" style="width:100%; font-size:36px; border-collapse:collapse;" align="center" cellpadding="40" cellspacing="0" border="1">
   <tbody>
     <tr style="font-size:36px; font-weight:700;">
-      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://neohiro.github.io" style="font-size:36px; font-weight:700;">🌐 neohiro</a></td>
-      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://neohiro.github.io/mesh-vanity-key" style="font-size:36px; font-weight:700;">🔑 mesh-vanity-key</a></td>
-      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://transhumanists.github.io" style="font-size:36px; font-weight:700;">🧬 transhumanists</a></td>
+      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://neohiro.github.io" title="neohiro profile" aria-label="neohiro profile" style="font-size:36px; font-weight:700;">🌐 neohiro</a></td>
+      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://neohiro.github.io/mesh-vanity-key" title="mesh-vanity-key" aria-label="mesh-vanity-key" style="font-size:36px; font-weight:700;">🔑 mesh-vanity-key</a></td>
+      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://transhumanists.github.io" title="transhumanists" aria-label="transhumanists" style="font-size:36px; font-weight:700;">🧬 transhumanists</a></td>
     </tr>
     <tr style="font-size:36px; font-weight:700;">
-      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://frenzypenguin.media" style="font-size:36px; font-weight:700;">🎬 frenzypenguin.media</a></td>
-      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://openstageis.land" style="font-size:36px; font-weight:700;">🏝️ openstageis.land</a></td>
-      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://domail.space" style="font-size:36px; font-weight:700;">🔗 domail.space</a></td>
+      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://frenzypenguin.media" title="frenzypenguin.media" aria-label="frenzypenguin.media" style="font-size:36px; font-weight:700;">🎬 frenzypenguin.media</a></td>
+      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://openstageis.land" title="openstageis.land" aria-label="openstageis.land" style="font-size:36px; font-weight:700;">🏝️ openstageis.land</a></td>
+      <td align="center" width="33.33%" style="padding:40px; font-size:36px; font-weight:700; line-height:2.5;"><a href="https://domail.space" title="domail.space" aria-label="domail.space" style="font-size:36px; font-weight:700;">🔗 domail.space</a></td>
     </tr>
   </tbody>
 </table>
