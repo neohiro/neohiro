@@ -47,7 +47,7 @@
         "type": "local",
         "command": ["python", "-m", "scrapling.cli", "mcp"],
         "disabled": false,
-        "note": "Whitelist applied (orjson DLL now loads; import passes). Command verified: python -m scrapling.cli mcp exits 0 (stdio server). If frozen in production, check transport mode."
+        "note": "Whitelist applied (orjson DLL loads; import passes). Command: python -m scrapling.cli mcp (stdio). If frozen/early-exit, try --http --port 8000 for streamable-HTTP. Dependency conflict: mcp==2.3.0 breaks mcp-server-fetch/git/time (<2)."
       },
       "github": {
         "type": "local",
