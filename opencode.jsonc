@@ -46,8 +46,8 @@
       "scrapling": {
         "type": "local",
         "command": ["python", "-m", "scrapling.cli", "mcp"],
-        "disabled": true,
-        "note": "Status: FAILED (orjson DLL blocked by App Control → <frozen runpy> crash). Disabled to prevent broken server launch. Library import works only if orjson is whitelisted."
+        "disabled": false,
+        "note": "Whitelist applied (orjson DLL now loads; import passes). Command verified: python -m scrapling.cli mcp exits 0 (stdio server). If frozen in production, check transport mode."
       },
       "github": {
         "type": "local",

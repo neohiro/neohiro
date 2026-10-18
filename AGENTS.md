@@ -9,7 +9,7 @@ Active MCP servers configured in this project:
 - **git** (`mcp-server-git`) — Repository history/diffs (disabled by default; enable with `opencode mcp connect git` when needed).
 - **fetch** (`mcp-server-fetch`) — DISABLED: deprecated due to reliability issues. Use `scrapling` (scraping/extraction) + `playwright` (JS/full-page retrieval) + `context7` (library docs) instead.
 - **memory** (`@modelcontextprotocol/server-memory`) — Persistent knowledge graph across sessions.
-- **scrapling** (`scrapling.cli mcp`) — FAILED: installed (`scrapling-0.5`) but `orjson` DLL blocked by App Control → `<frozen runpy>` crash. Disabled. Library usable directly (`python -c ...`) only if orjson whitelisted.
+- **scrapling** (`scrapling.cli mcp`) — ENABLED: `orjson` whitelisted (import passes). Command: `python -m scrapling.cli mcp` (stdio). Monitor for frozen runs; disable if blocked again.
 - **github** (`@modelcontextprotocol/server-github`) — Full repo/PR/issue access (disabled; needs `GITHUB_TOKEN`).
 - **playwright** (`@playwright/mcp`) — Full browser/page-level retrieval (JS-heavy pages, screenshots, DOM inspect).
 - **time** (`mcp_server_time`) — Timestamps.
