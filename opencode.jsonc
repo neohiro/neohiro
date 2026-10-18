@@ -46,8 +46,8 @@
       "scrapling": {
         "type": "local",
         "command": ["python", "-m", "scrapling.cli", "mcp"],
-        "disabled": false,
-        "note": "Requires pip install 'scrapling[ai]'. Replaces brave-search for scraping/web extraction. Dependency warning: installed mcp==2.3.0 conflicts with mcp-server-fetch/git/time requiring mcp<2 — those servers may break until resolved."
+        "disabled": true,
+        "note": "Requires pip install 'scrapling[ai]'. Installed but non-functional: orjson DLL blocked by App Control policy causes <frozen runpy> crash on import (scrapling.cli). Use library directly (from scrapling.fetchers) until policy resolved."
       },
       "github": {
         "type": "local",
