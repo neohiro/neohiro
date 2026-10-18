@@ -73,17 +73,6 @@
         ],
         "disabled": false
       },
-      "scrapling": {
-        "type": "local",
-        "command": [
-          "python",
-          "-m",
-          "scrapling.cli",
-          "mcp"
-        ],
-        "disabled": true,
-        "note": "Server exits 0 instantly (not blocking); stdio and --http both exit. Assumption: requires stdio wrapper/fix upstream; disabled until fixed."
-      },
       "github": {
         "type": "local",
         "command": [
