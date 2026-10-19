@@ -1,6 +1,7 @@
 #include "WebTerminal.hpp"
 #include "multiboot.h"
 #include "scheduler.h"
+#include <stdio.h>
 #include <string.h>
 
 static bool s_running = false;
@@ -21,12 +22,12 @@ bool WebTerminal_is_running(void) {
 }
 
 const char* WebTerminal_status_json(void) {
-    // Minimal embedded JSON: active slot + concurrent count + role names
-    // Defensive: truncates safely at 511 chars (null-terminated)
+    // Minimal embedded JSON: active slot + concurrent count + dual state
+    // Defensive: snprintf bounds the output and always null-terminates
     snprintf(s_json_buf, sizeof(s_json_buf),
         "{\"active\":%lu,\"concurrent\":%lu,\"dual\":%s,\"slots_ok\":1}",
         (unsigned long)multiboot_get_active_slot(),
         (unsigned long)multiboot_active_concurrent_count(),
-        (multiboot_active_concurrent_count() > 1 ? "true" : "false");
+        (multiboot_dual_run_enabled() ? "true" : "false"));
     return s_json_buf;
 }

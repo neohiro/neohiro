@@ -1,28 +1,50 @@
 #!/usr/bin/env python3
-"""Verify router gate + listen-before-send + concurrent scheduling."""
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'include'))
+"""Verify concurrency primitives: router gate, scheduler cap, priority arbitration."""
+import os
 
-def test_router_gate_blocks_without_validation():
-    # Assumption: router defaults to not-transmitting until validated
-    assert True  # stub; real check requires embedded environment
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FIRMWARE = os.path.join(ROOT, 'firmware')
+
+
+def _read(*parts):
+    return open(os.path.join(FIRMWARE, *parts), 'r', encoding='utf-8').read()
+
 
 def test_main_uses_gate():
-    # Verify source includes validation and listen call
-    src = open(os.path.join(os.path.dirname(__file__), '..', 'firmware/src/main.cpp'), 'r', encoding='utf-8').read()
-    assert 'SX1262Router_gate' in src
+    src = _read('src', 'main.cpp')
     assert 'SX1262Router_gate' in src
     assert 'SX1262Router_can_tx' in src
     assert 'SX1262Router_init' in src
+    # Transmission must not be reachable before the gate passes
+    assert src.index('SX1262Router_gate()') < src.index('multiboot_load_slot(SLOT_RADIO)')
+
+
+def test_scheduler_cap():
+    hdr = _read('include', 'scheduler.h')
+    assert '#define MAX_CONCURRENT 4' in hdr
+    src = _read('src', 'scheduler.cpp')
+    assert 'scheduler_active_count() >= MAX_CONCURRENT' in src
+
+
+def test_priority_preemption():
+    src = _read('src', 'radio_arbiter.cpp')
+    # Higher priority must preempt a lower-priority holder of the radio
+    assert 'prio > s_granted_prio' in src
+    hdr = _read('include', 'radio_arbiter.h')
+    assert 'uint8_t prio' in hdr
+
 
 def test_no_todo():
-    for f in ['firmware/src/SX1262Router.cpp', 'firmware/src/main.cpp']:
-        content = open(os.path.join(os.path.dirname(__file__), '..', f), 'r', encoding='utf-8').read()
-        assert 'TODO' not in content
-        assert 'FIXME' not in content
+    for name in ('src/SX1262Router.cpp', 'src/main.cpp', 'src/WebTerminal.cpp',
+                 'src/multiboot.cpp', 'src/scheduler.cpp', 'src/radio_arbiter.cpp'):
+        content = _read(*name.split('/'))
+        assert 'TODO' not in content, f"{name}: has TODO"
+        assert 'FIXME' not in content, f"{name}: has FIXME"
+
 
 if __name__ == '__main__':
-    test_router_gate_blocks_without_validation()
     test_main_uses_gate()
+    test_scheduler_cap()
+    test_priority_preemption()
     test_no_todo()
-    print('PASS: router gate + concurrent + no TODO verified')
+    print("PASS: router gate ordering, scheduler cap, priority preemption, no dead code")

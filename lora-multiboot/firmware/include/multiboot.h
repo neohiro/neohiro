@@ -35,13 +35,24 @@ typedef struct {
     bool     active;
 } slot_config_t;
 
-extern slot_config_t g_slots[MAX_SLOTS];
+/* Slot geometry is immutable at runtime: the table is const and every
+ * runtime decision (usable, loaded, written) lives in internal state. */
+extern const slot_config_t g_slots[MAX_SLOTS];
+
+/* Platform flash writer: returns true on success. Registered by the
+ * platform layer; without it, updates are refused rather than silently
+ * reported as successful. */
+typedef bool (*slot_writer_fn)(uint32_t offset, const uint8_t* data, uint32_t len);
+void multiboot_set_writer(slot_writer_fn writer);
 
 void multiboot_init(void);
 bool multiboot_load_slot(uint32_t slot_id);
 bool multiboot_update_slot(uint32_t slot_id, const uint8_t* data, uint32_t len);
 uint32_t multiboot_get_active_slot(void);
 void multiboot_set_dual_run(bool enable); // Simultaneous Meshtastic + MeshCore
+bool multiboot_dual_run_enabled(void);
+bool multiboot_slot_usable(uint32_t slot_id);
+const slot_config_t* multiboot_slot_info(uint32_t slot_id);
 
 // Concurrent execution support (scheduler + arbiter required)
 bool multiboot_load_concurrent(uint32_t slot_id);

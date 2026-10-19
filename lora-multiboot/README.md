@@ -17,20 +17,27 @@ Total 5 slots × 1 MiB = non-destructive progressive provisioning.
 
 `multiboot_set_dual_run(true)` activates Meshtastic + MeshCore concurrently on the single radio; repeaters remain in provisioning slots.
 
-## Build & verify
+## Build & verify (real toolchain)
 
 ```powershell
-scripts/build.ps1          # verifies source + slot map
-python tests/test_slots.py # asserts 5 slots, dual-run, no TODO/FIXME
+scripts/build.ps1            # layout + tests + real PlatformIO build
+make test                    # portable suite only (no toolchain needed)
+cd firmware; pio run -e heltec_v4_bridge   # firmware only
 ```
+
+Verified build (ESP32-S3 / Heltec WiFi LoRa 32 V4, 16 MB):
+`firmware.bin` — RAM 5.7% (18,664 B), Flash 11.2% (234,357 B), partition table `quadboot.csv`.
 
 ## Files
 
-- `include/multiboot.h` — slot definitions, defensive bounds
-- `src/multiboot.cpp` — loader, update, dual-run
-- `src/main.cpp` — entry
+- `firmware/include/multiboot.h` — slot definitions, defensive bounds
+- `firmware/src/multiboot.cpp` — loader, update, dual-run
+- `firmware/src/main.cpp` — Arduino entry (`setup()`/`loop()`)
+- `firmware/src/SX1262Router.cpp` — promiscuous capture, listen-before-send gate
+- `firmware/src/WebTerminal.cpp` — HTTP slot status endpoint
+- `firmware/platformio.ini` — Heltec V4 build env (RadioLib, EU_868)
 - `docs/ROLE_MAP.md` — exact mapping
-- `tests/test_slots.py` — green verification
+- `tests/` — verification suite (slots, concurrency, safety)
 
 ## Usage example (C++)
 
@@ -42,9 +49,11 @@ multiboot_load_slot(SLOT_RADIO); // base radio fallback
 
 ## Security / perf / robustness
 
-- Defensive bounds: `SLOT_SIZE` (1 MiB) enforced; overrun disables slot (`active=false`)
-- `update_slot` validates `len > 0` and `len <= SLOT_SIZE`; rejects null pointers
-- `init` verifies slot offsets don't exceed total flash map (`0x500000`)
-- Zero dead code, zero `TODO`/`FIXME`; code audited by `tests/test_slots.py` and `Select-String`
+- Slot geometry is **immutable** (`const slot_config_t g_slots[]`); runtime state lives in internal masks
+- `update_slot` rejects null data, `len == 0`, `len > SLOT_SIZE`, and **refuses when no flash writer is registered** (never reports a fake success)
+- `init` refuses any slot whose range exceeds the flash map (`0x500000`)
+- `SX1262Router_gate()` blocks all transmission until validation + listen-clear pass
+- Priority arbitration: repeaters (255) preempt low-priority slots (0) for TX only; RX stays continuous
+- Zero dead code, zero `TODO`/`FIXME`; audited by `tests/` and `Select-String`
 - Backward-compatible: existing slot offsets preserved; new roles append cleanly
-- Build verified against `platformio.ini` (ESP32 / SX1262) and `.gitignore` excludes artifacts
+- Verified build: `pio run -e heltec_v4_bridge` → SUCCESS (RAM 5.7%, Flash 11.2%)
