@@ -1,0 +1,12 @@
+# lora-multiboot build artifacts
+build/
+.pio/
+.cmake/
+*.o
+*.a
+*.elf
+*.bin
+.vscode/
+.idea/
+*.pyc
+__pycache__/
