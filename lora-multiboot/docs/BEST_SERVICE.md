@@ -23,6 +23,7 @@ Built on real `neohiro/lora-multiboot` architecture (verified via `gh` + `git cl
 - **USB programming** (`install-lora-multiboot.bat/sh`, `tools/flash.py`): one adapter, all slots; validates with `gate.py` (needs `g++`).
 - **WiFi/BLE** (`ACCESS_METHODS.md`): per active slot; bridge image serves both. No hidden interfaces on dead slots.
 - **Concurrent scheduling** (`scheduler.cpp`): cooperative 4-slot max; bitmask count for fast tick. Ready for dual/quad boot.
+- **Web Terminal** (`WebTerminal.cpp`): embedded HTTP endpoint (`/`) providing JSON status (`active`, `concurrent`, `dual`) when framework is live; defensive; 0 TODO.
 - **Sniffer / unknown PID** (`pid=0x00`): all RX copied to tool; no filter = full-spectrum awareness for emergency monitoring.
 
 ## 5. Quality assurance (verified)

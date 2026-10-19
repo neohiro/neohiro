@@ -26,3 +26,4 @@
 - USB: programming only; concurrent slots use `scheduler_tick()` + `shared_context_opt.hpp`
 - BLE: active slot only broadcasts; other slots are loaded but not broadcasting until promoted by `SlotLifecycle`
 - WiFi: same — active slot uses it; concurrent tasks (scheduler) do not independently open WiFi sockets
+- Web Terminal (`WebTerminal.hpp`/`.cpp`): embedded HTTP endpoint (`/`) returns JSON status (`active`, `concurrent`, `dual`) when framework is live; defensive, no RF interference

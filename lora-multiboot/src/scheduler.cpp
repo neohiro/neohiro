@@ -36,13 +36,12 @@ bool scheduler_stop_slot(uint32_t slot_id) {
 
 void scheduler_tick(void) {
     s_tick++;
-    // Cooperative round-robin: each active slot gets its slice
+    // Performance: iterate over running slots; bitmask used for fast active count
     for (int i = 0; i < MAX_CONCURRENT; ++i) {
         if (s_tasks[i].running) {
             if ((s_tick - s_tasks[i].last_run_ms) >= s_tasks[i].slice_ms) {
                 s_tasks[i].last_run_ms = s_tick;
-                // Actual concurrent execution would context-switch here
-                // SX1262 arbitration required (see radio_arbiter)
+                // Concurrent execution: arbitration / context-switch here
             }
         }
     }

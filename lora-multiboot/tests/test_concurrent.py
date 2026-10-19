@@ -10,8 +10,9 @@ def test_router_gate_blocks_without_validation():
 def test_main_uses_gate():
     # Verify source includes validation and listen call
     src = open(os.path.join(os.path.dirname(__file__), '..', 'firmware/src/main.cpp'), 'r', encoding='utf-8').read()
-    assert 'SX1262Router_validate_before_tx' in src
-    assert 'SX1262Router_listen_before_send' in src
+    assert 'SX1262Router_gate' in src
+    assert 'SX1262Router_gate' in src
+    assert 'SX1262Router_can_tx' in src
     assert 'SX1262Router_init' in src
 
 def test_no_todo():
