@@ -1,0 +1,168 @@
+name: Build & Deploy (Jekyll)
+
+on:
+  push:
+    branches:
+      main
+  pull_request:
+    branches:
+      main
+  workflow_dispatch:
+
+# The LANScan dashboard is a self-contained app inside this site, checked by its
+# own Node tests. They run as a separate required job rather than as steps on
+# `verify` for two reasons: it needs setup-node, and a failure in a 45 KB
+# vanilla-JS app should name that app rather than surface as a data-layer error
+# on the Jekyll build.
+# Branch protection must require `lanscan` by name. Renaming this job re-freezes
+# every pull request, which is the failure mode documented on the verify job
+# below.
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Branch protection on main requires status checks named `verify` and
+  # `LANScan self-contained`. The job names are load-bearing: a required
+  # context no workflow can produce makes every pull request permanently
+  # unmergeable while the branch looks green. Renaming or removing either job
+  # re-freezes the repository. neohiro/doctor documents this failure mode and
+  # the required-check table under knowledge/cross-repo-invariants.md.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      # Load-bearing. This job reads files out of the working tree, so without a
+      # checkout every step below runs against an empty workspace and the first
+      # one fails with
+      #   python: can't open file '.../scripts/verify_data.py': [Errno 2]
+      # which reads like a script missing from the repository rather than a
+      # missing checkout -- the script is in the repository. Removing or
+      # reordering this line reproduces the failure. It was lost once already
+      # and re-added by #24; the comment on the build job below used to carry
+      # this warning, and a merge that took the older copy of the file dropped
+      # the step again. Do not remove this line.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify data files match the tool docs
+        run: python scripts/verify_data.py
+      - name: Verify repos.json is in sync with _data/repos.yml
+        run: |
+          pip install --quiet pyyaml
+          python scripts/sync_repos_json.py --check
+      # Offline, stdlib only. Catches a layout or stylesheet link naming a file
+      # that is not in the repository -- which is what happened to the
+      # Ecosystem Network frame on all four sites: present in a working tree,
+      # absent from the repo, so CI either aborted on a missing include or
+      # rendered the footer unstyled with a green build.
+      - name: Verify every include and asset reference resolves
+        run: python scripts/verify_references.py
+      # Complement, not duplicate: verify_references.py resolves includes,
+      # assets and page routes. This checks the data layer -- repos.yml vs
+      # _tools front-matter drift, unknown fields, UTF-8 BOMs and mojibake.
+      # This repo has shipped BOM and mojibake defects more than once
+      # (assets/css/main.css, assets/js/network-ux.js), and this script was
+      # unwired after 61050fe, so those checks only ran if invoked by hand.
+      - name: Verify _tools <-> _data/repos.yml consistency
+        run: python scripts/verify_data.py
+
+      # The shared chrome has shipped broken while the build stayed green: a
+      # `display: flex` left behind after a `display: none` fix, so the retired
+      # dock kept painting over the live bar and swallowing its clicks;
+      # hardcoded #fff on text sitting on the page background, which measured
+      # 1.05:1 in light mode; and a conversation frame sized by its content rather
+      # than its container. None of those fail a Jekyll build or any of the
+      # verifiers above, so they need their own gate.
+      #
+      # Single-site mode here (a checkout has no siblings to diff against), so it
+      # checks this site's own copy of each shared file. The cross-site
+      # byte-identity comparison runs in the workspace.
+      - name: Check shared chrome contract
+        run: python scripts/check_chrome_contract.py
+
+      - name: Test the chrome gate itself
+        # A checker that silently stops detecting things reports green, which is
+        # how this gate could pass while the bottom bar was invisible. The
+        # self-test pins a real defect for every rule and fails loudly if the
+        # gate stops catching it.
+        run: python scripts/test_check_chrome_contract.py
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          cache-version: v2
+
+      - name: Build Jekyll Site
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./_site
+
+  # The LANScan dashboard's own gate: it must make no third-party request on
+  # load. Wired here rather than left to the retired lanscan.github.io repo,
+  # which is where this check used to live -- it stopped running when the
+  # dashboard moved onto this site and the stub took its workflow with it, so
+  # for a while nothing was enforcing the privacy property the page advertises.
+  lanscan:
+    name: LANScan self-contained
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Self-containment gate
+        # Privacy is the product. The page must render with the network off.
+        run: node lanscan/scripts/check-selfcontained.mjs lanscan
+
+      - name: Self-containment gate tests
+        # The gate has one exemption -- an anchor href the visitor chooses to
+        # follow. That is the kind of exemption that widens unnoticed, so it is
+        # tested rather than trusted.
+        run: node lanscan/scripts/test-selfcontained.mjs
+
+      - name: Syntax-check the dashboard
+        run: node --check lanscan/assets/js/lanscan.js
+
+      - name: Validate JSON
+        run: |
+          set -euo pipefail
+          for f in $(find lanscan -name '*.json' -not -path '*/.git/*'); do
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" \
+              || { echo "::error::invalid JSON: $f"; exit 1; }
+          done
+          echo "all JSON valid"
+
+  deploy:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: [build, lanscan]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v5

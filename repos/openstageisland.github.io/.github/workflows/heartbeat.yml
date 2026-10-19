@@ -1,0 +1,33 @@
+name: Heartbeat (Open Stage Island)
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync FB feed (Open Stage Island)
+        run: |
+          mkdir -p data/feeds
+          echo "Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)" > data/feeds/osi-fb.last
+          git add data/feeds
+          git diff --staged --quiet || (git -c user.name="N3Vr0Tr4nsm1tt3r" -c user.email="cns@neohiro.io" commit -m "OSI FB feed sync [skip ci]" && git push)
+
+      - name: Generate OSI heartbeats
+        # The SVG is a multi-line JS template literal. Inlined in this `run: |`
+        # block, the lines starting at column 0 terminated the YAML block scalar,
+        # so the workflow could never be parsed and failed on all 26 recorded
+        # runs. frenzypenguin-media hit the same bug and fixed it the same way.
+        run: node scripts/generate-heartbeat.js
+
+      - name: Commit
+        run: |
+          git config user.name "N3Vr0Tr4nsm1tt3r / CNS"
+          git config user.email "cns@neohiro.io"
+          git add heartbeats/
+          git diff --staged --quiet || (git commit -m "OSI heartbeat [skip ci]" && git push)

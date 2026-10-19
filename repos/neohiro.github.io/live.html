@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>neohiro / Live Data</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #080a0e; --surface: #0f1318; --border: #1a2030; --fg: #eceff1; --fg-muted: #667788; --accent: #7c4dff; --green: #00cc88; --blue: #00aaff; --magenta: #ff0066; }
+    body { background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; }
+  </style>
+  <link rel="stylesheet" href="assets/css/neohiro-widgets.css">
+</head>
+<body>
+  <div class="nhw-root">
+    <h1>neohiro / Live Data</h1>
+    <p class="nhw-subtitle">Real-time network health, visitor counters, social media metrics, GitHub activity, and milestone tracking. All widgets auto-refresh every session.</p>
+
+    <!-- ── Health Strip ──────────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div class="nhw-section-header">
+        <h2 class="nhw-section-title">Network Health</h2>
+        <span class="nhw-section-badge" id="nhw-health-badge" style="background: var(--green); color: #000;">LIVE</span>
+      </div>
+      <div id="nhw-health-strip"></div>
+    </div>
+
+    <!-- ── Stat Cards ──────────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div class="nhw-section-header">
+        <h2 class="nhw-section-title">Key Metrics</h2>
+      </div>
+      <div class="nhw-stat-grid" id="nhw-stat-grid"></div>
+    </div>
+
+    <!-- ── Social Media ──────────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div id="nhw-social"></div>
+    </div>
+
+    <!-- ── Visitor Counters ─────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div class="nhw-section-header">
+        <h2 class="nhw-section-title">Visitor Counters</h2>
+      </div>
+      <div class="nhw-stat-grid" id="nhw-counters"></div>
+    </div>
+
+    <!-- ── Heartbeat SVGs ──────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div class="nhw-section-header">
+        <h2 class="nhw-section-title">Heartbeat Cycles</h2>
+        <span class="nhw-section-badge" style="background: var(--blue); color: #000;">SVG</span>
+      </div>
+      <div id="nhw-heartbeats"></div>
+    </div>
+
+    <!-- ── Activity Feed ────────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div id="nhw-activity"></div>
+    </div>
+
+    <!-- ── Milestones ──────────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div id="nhw-milestones"></div>
+    </div>
+
+    <!-- ── Sparklines ──────────────────────────────────────────────── -->
+    <div class="nhw-section">
+      <div class="nhw-section-header">
+        <h2 class="nhw-section-title">Live Sparklines</h2>
+      </div>
+      <div class="nhw-stat-grid">
+        <div class="nhw-stat-card">
+          <div class="nhw-stat-label">Health Score</div>
+          <canvas id="nhw-spark-health" class="nhw-sparkline"></canvas>
+        </div>
+        <div class="nhw-stat-card">
+          <div class="nhw-stat-label">Network TX</div>
+          <canvas id="nhw-spark-nettx" class="nhw-sparkline"></canvas>
+        </div>
+        <div class="nhw-stat-card">
+          <div class="nhw-stat-label">Active Connections</div>
+          <canvas id="nhw-spark-conn" class="nhw-sparkline"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Clock ────────────────────────────────────────────────────── -->
+    <div class="nhw-section" style="text-align: center;">
+      <div class="nhw-clock" id="nhw-clock">--:--:--</div>
+      <div class="nhw-stat-sub" style="margin-top: 8px;">Local time (auto-updates)</div>
+    </div>
+  </div>
+
+  <script src="assets/js/neohiro-widgets.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      /* Configuration — dashboard API base. On production, this should point to the
+       * Cloudflare Worker that handles /api/health, /api/social-counters, etc.
+       * Set DASHBOARD_API to the Worker origin (e.g. 'https://api.neohiro.io'). */
+      var API = window.NEODASHBOARD_API || '';
+      NeohiroWidgets.init({
+        heartbeatBase: '/heartbeats',
+        apiBase: API,
+        pollInterval: 60000,
+        healthInterval: 30000,
+        sparkInterval: 10000,
+      });
+
+      /* Health strip */
+      NeohiroWidgets.loadHealthStrip('nhw-health-strip', API + '/api/health');
+
+      /* Stat cards */
+      var grid = document.getElementById('nhw-stat-grid');
+      NeohiroWidgets.renderStatCard(grid, { id: 'nhw-stat-exit', label: 'Exit Nodes', value: '—', sub: 'Tailscale exit nodes' });
+      NeohiroWidgets.renderStatCard(grid, { id: 'nhw-stat-peers', label: 'Tailnet Peers', value: '—', sub: 'Connected devices' });
+      NeohiroWidgets.renderStatCard(grid, { id: 'nhw-stat-subnets', label: 'Subnets', value: '—', sub: 'Advertised routes' });
+      NeohiroWidgets.renderStatCard(grid, { id: 'nhw-stat-repos', label: 'Public Repos', value: '—', sub: 'neohiro org' });
+
+      fetch(API + '/api/health', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (!d) return;
+        NeohiroWidgets.updateStatValue('nhw-stat-exit', d.exit_nodes || 0, { format: NeohiroWidgets.fmtCount });
+        NeohiroWidgets.updateStatValue('nhw-stat-peers', d.peers || 0, { format: NeohiroWidgets.fmtCount });
+        NeohiroWidgets.updateStatValue('nhw-stat-subnets', d.subnets || 0, { format: NeohiroWidgets.fmtCount });
+      }).catch(function () {});
+
+      fetch('https://api.github.com/users/neohiro/repos?per_page=100', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).then(function (data) {
+        if (Array.isArray(data)) NeohiroWidgets.updateStatValue('nhw-stat-repos', data.length, { format: NeohiroWidgets.fmtCount });
+      }).catch(function () {});
+
+      /* Social counters */
+      NeohiroWidgets.loadSocialCounters('nhw-social', API + '/api/social-counters', { interval: 900000 });
+
+      /* Visitor counters */
+      var countersEl = document.getElementById('nhw-counters');
+      NeohiroWidgets.loadVisitorCounter('1631173', NeohiroWidgets.renderStatCard(countersEl, { id: 'nhw-c-neohiro', label: 'neohiro.github.io', sub: 'Counter #1631173' }).id, { pollMs: 300000 });
+      NeohiroWidgets.loadVisitorCounter('1631174', NeohiroWidgets.renderStatCard(countersEl, { id: 'nhw-c-fpm', label: 'frenzypenguin-media', sub: 'Counter #1631174' }).id, { pollMs: 300000 });
+      NeohiroWidgets.loadVisitorCounter('1631175', NeohiroWidgets.renderStatCard(countersEl, { id: 'nhw-c-osi', label: 'openstageisland', sub: 'Counter #1631175' }).id, { pollMs: 300000 });
+      NeohiroWidgets.loadVisitorCounter('1631176', NeohiroWidgets.renderStatCard(countersEl, { id: 'nhw-c-trans', label: 'transhumanists', sub: 'Counter #1631176' }).id, { pollMs: 300000 });
+
+      /* Heartbeat SVGs */
+      NeohiroWidgets.loadHeartbeat('nhw-heartbeats', ['public', 'authed', 'godadmin'], { basePath: '/heartbeats', pollMs: 300000 });
+
+      /* Activity feed */
+      NeohiroWidgets.loadActivityFeed('nhw-activity', [
+        'neohiro/Voicemail', 'neohiro/Heart', 'neohiro/network', 'neohiro/userdata',
+      ], { title: 'Cross-Org Activity', limit: 12, interval: 300000 });
+
+      /* Milestones */
+      NeohiroWidgets.loadMilestones('nhw-milestones', 'https://transhumanists.github.io/data/milestones.json', { limit: 8, interval: 300000 });
+
+      /* Sparklines */
+      NeohiroWidgets.startSparkline('nhw-spark-health', API + '/api/health', { color: '#00cc88', fill: true, interval: 30000, maxPoints: 30 });
+
+      /* Clock */
+      function tickClock() {
+        var el = document.getElementById('nhw-clock');
+        if (!el) return;
+        var d = new Date();
+        el.textContent = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2);
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+---
+# Front matter is present so Jekyll publishes this as a page at /lanscan/ and
+# leaves the rest of the directory (assets/, schema/, samples/) as untouched
+# static files. No layout is applied on purpose: the dashboard is a standalone
+# instrument panel, and inheriting the site layout would pull in the nav and
+# auth-bar scripts it does not need. The palette is the site's own, via the
+# shared custom properties in lanscan.css.
+title: "LANScan - local network / USB / driver inventory"
+sitemap: false
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>LANScan — LAN / USB / driver inventory</title>
+<meta name="description" content="Local-only, privacy-first inventory of every device on your LAN, every USB device, and every driver on the host. No cloud, no telemetry, no third-party requests.">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/lanscan.css">
+</head>
+<body>
+
+<a class="skip" href="#sec-lan">Skip to inventory</a>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <circle cx="12" cy="12" r="2.4"/>
+        <circle cx="12" cy="12" r="6.4" opacity=".65"/>
+        <circle cx="12" cy="12" r="10.4" opacity=".35"/>
+      </svg>
+      <div class="brand-txt">
+        <h1>LANScan</h1>
+        <p>LAN &middot; USB &middot; drivers &mdash; local only</p>
+      </div>
+    </div>
+
+    <div class="src" id="src">
+      <span class="src-dot" id="src-dot" data-state="idle"></span>
+      <span class="src-label" id="src-label">starting</span>
+      <span class="src-meta" id="src-meta"></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="privacy" aria-label="Privacy status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+      <path d="M12 3l7 3v6c0 4.3-2.9 8.2-7 9-4.1-.8-7-4.7-7-9V6l7-3z"/>
+      <path d="M9 12l2.2 2.2L15.5 10"/>
+    </svg>
+    <p>
+      <strong>Nothing leaves this device.</strong>
+      No CDN, no fonts, no analytics, no telemetry. Data lives in memory and in this
+      browser&rsquo;s <code>localStorage</code> only, so a refresh does not lose it. The page
+      talks to one address only &mdash; the LANScan service on your own machine.
+    </p>
+  </section>
+
+  <section class="alerts" id="alerts" aria-live="polite" hidden></section>
+
+  <section class="stats" id="stats" aria-label="Summary metrics">
+    <div class="stat" data-k="lanOnline"><span class="s-lbl">LAN online</span><span class="s-val" id="s-lanOnline">&mdash;</span><span class="s-sub" id="s-lanOnlineSub">of 0 seen</span></div>
+    <div class="stat" data-k="lanTotal"><span class="s-lbl">LAN tracked</span><span class="s-val" id="s-lanTotal">&mdash;</span><span class="s-sub" id="s-lanTotalSub">devices</span></div>
+    <div class="stat" data-k="edge"><span class="s-lbl">Edge / gateway</span><span class="s-val" id="s-edge">&mdash;</span><span class="s-sub" id="s-edgeSub">routers &amp; infra</span></div>
+    <div class="stat" data-k="usb"><span class="s-lbl">USB devices</span><span class="s-val" id="s-usb">&mdash;</span><span class="s-sub" id="s-usbSub">ports</span></div>
+    <div class="stat" data-k="drivers"><span class="s-lbl">Drivers</span><span class="s-val" id="s-drivers">&mdash;</span><span class="s-sub" id="s-driversSub">loaded</span></div>
+    <div class="stat" data-k="updates" id="stat-updates"><span class="s-lbl">Updates</span><span class="s-val" id="s-updates">&mdash;</span><span class="s-sub" id="s-updatesSub">pending</span></div>
+  </section>
+
+  <!-- 1 — LAN DEVICES -->
+  <section class="card" id="sec-lan">
+    <div class="card-h">
+      <h2><span class="ord">1</span> LAN devices</h2>
+      <div class="card-m"><span id="lan-meta">idle</span></div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl" id="tbl-lan">
+        <thead>
+          <tr>
+            <th class="c-name">Host</th><th>IP</th><th>MAC</th><th>Vendor</th>
+            <th class="c-hide-sm">Iface</th><th class="c-hide-sm">RTT</th>
+            <th class="c-hide-sm">Seen</th><th>State</th><th>Update</th>
+          </tr>
+        </thead>
+        <tbody id="body-lan"><tr class="empty"><td colspan="9">waiting for first snapshot&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2 — USB DEVICES -->
+  <section class="card" id="sec-usb">
+    <div class="card-h">
+      <h2><span class="ord">2</span> USB devices</h2>
+      <div class="card-m"><span id="usb-meta">idle</span></div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl" id="tbl-usb">
+        <thead>
+          <tr>
+            <th class="c-name">Port</th><th>Device</th><th>IDs</th>
+            <th class="c-hide-sm">Class</th><th class="c-hide-sm">Serial</th>
+            <th>Driver</th><th>Update</th>
+          </tr>
+        </thead>
+        <tbody id="body-usb"><tr class="empty"><td colspan="7">waiting for first snapshot&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3 — DRIVERS -->
+  <section class="card" id="sec-drv">
+    <div class="card-h">
+      <h2><span class="ord">3</span> Drivers &amp; system drivers</h2>
+      <div class="card-m"><span id="drv-meta">idle</span></div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl" id="tbl-drv">
+        <thead>
+          <tr>
+            <th class="c-name">Device</th><th>Bus</th><th>Driver</th>
+            <th>Version</th><th class="c-hide-sm">Provider</th>
+            <th class="c-hide-sm">Dated</th><th>Update</th>
+          </tr>
+        </thead>
+        <tbody id="body-drv"><tr class="empty"><td colspan="7">waiting for first snapshot&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4 — SYSTEM -->
+  <section class="card" id="sec-sys">
+    <div class="card-h">
+      <h2><span class="ord">4</span> Host &amp; system resources</h2>
+      <div class="card-m"><span id="sys-meta">idle</span></div>
+    </div>
+    <div class="meters" id="meters"></div>
+  </section>
+
+  <!-- 5 — TESTS -->
+  <section class="card" id="sec-tests">
+    <div class="card-h">
+      <h2><span class="ord">5</span> Tests ran</h2>
+      <div class="card-m"><span id="tests-meta">idle</span></div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl tbl-tight" id="tbl-tests">
+        <thead><tr><th class="c-name">Test</th><th>Target</th><th>Result</th><th class="c-hide-sm">Took</th><th class="c-hide-md">Detail</th></tr></thead>
+        <tbody id="body-tests"><tr class="empty"><td colspan="5">waiting for first snapshot&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" id="sec-app">
+    <div class="card-h"><h2>Get the app</h2><div class="card-m"><span>standalone builds &middot; no Python needed</span></div></div>
+    <div class="src-body">
+      <p class="hint">
+        This page only renders what the LANScan service reports &mdash; browsers are sandboxed and
+        cannot send ARP or ICMP. Download the standalone build for your platform, run it on the
+        machine you want to inspect, then point this page at <code>127.0.0.1</code> below. It binds
+        loopback only, so the snapshot is not reachable from your LAN.
+      </p>
+      <div class="dl-grid">
+        <a class="dl" href="https://github.com/neohiro/LANScan/releases/latest/download/LANScan-Windows.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <span class="dl-t">Windows</span>
+          <span class="dl-s">.zip</span>
+        </a>
+        <a class="dl" href="https://github.com/neohiro/LANScan/releases/latest/download/LANScan-macOS.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <span class="dl-t">macOS</span>
+          <span class="dl-s">.zip</span>
+        </a>
+        <a class="dl" href="https://github.com/neohiro/LANScan/releases/latest/download/LANScan-Linux.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <span class="dl-t">Linux</span>
+          <span class="dl-s">.zip</span>
+        </a>
+      </div>
+      <p class="hint hint-dim">
+        Release v1.0.0 &middot; <a href="https://github.com/neohiro/LANScan/releases/latest">all builds &amp; checksums</a>
+        &middot; <a href="https://github.com/neohiro/LANScan">source</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="card" id="sec-src">
+    <div class="card-h"><h2>Data source</h2><div class="card-m"><span>stored in this browser</span></div></div>
+    <div class="src-body">
+      <p class="hint">
+        The page never scans anything by itself &mdash; browsers are sandboxed and cannot send
+        ARP or ICMP. Run the LANScan service on the machine you want to inspect; it serves the
+        snapshot over loopback only.
+      </p>
+      <div class="src-grid">
+        <label class="fld">
+          <span>Service endpoint</span>
+          <input id="in-endpoint" type="url" spellcheck="false" autocomplete="off" placeholder="http://127.0.0.1:8787">
+        </label>
+        <label class="fld">
+          <span>Poll interval</span>
+          <select id="in-interval">
+            <option value="1000">1 s</option>
+            <option value="2000" selected>2 s</option>
+            <option value="5000">5 s</option>
+            <option value="10000">10 s</option>
+          </select>
+        </label>
+        <label class="fld fld-check">
+          <input id="in-demo" type="checkbox">
+          <span>Offline sample data</span>
+        </label>
+      </div>
+      <div class="src-row">
+        <button class="btn" id="btn-apply" type="button">Connect</button>
+        <button class="btn btn-ghost" id="btn-loadfile" type="button">Load snapshot file&hellip;</button>
+        <input id="in-file" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p class="hint hint-dim" id="store-info">&nbsp;</p>
+    </div>
+  </section>
+
+  <p class="foot">
+    <span id="foot-gen">no snapshot yet</span> &middot;
+    <span id="foot-tool">LANScan</span> &middot;
+    <span class="foot-hint">Left-click a value to copy it &middot; right-click a row for the whole record</span>
+  </p>
+</main>
+
+<!-- persistent bay bar -->
+<div class="bay" id="bay">
+  <button class="bay-b exp" id="btn-export" type="button" title="Download the current snapshot as JSON">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+    <span>EXPORT</span>
+  </button>
+
+  <button class="bay-b run" id="btn-run" type="button" title="Pause live scanning (the list stops changing)">
+    <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+    <svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5l13 7.5-13 7.5z"/></svg>
+    <span id="run-label">PAUSE</span>
+  </button>
+
+  <button class="bay-b rst" id="btn-reset" type="button" title="Clear stored data and start scanning from scratch">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12a8 8 0 11-2.6-5.9"/><path d="M20 4v5h-5"/></svg>
+    <span>RESET</span>
+  </button>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script src="assets/js/lanscan.js"></script>
+</body>
+</html>

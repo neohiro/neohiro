@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neohiro.github.io/lanscan/schema/snapshot.schema.json",
+  "title": "LANScan snapshot",
+  "description": "One observation of the local network, the USB bus, the driver inventory and the host's system resources, as produced by the LANScan service and consumed by the dashboard at neohiro.github.io/lanscan. Every field is optional so that partial snapshots from constrained platforms still render; the dashboard degrades rather than blanks.",
+  "type": "object",
+  "required": ["schema_version"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Bumped only on a breaking change. The dashboard renders anything it does not recognise as unknown-and-ignored."
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO-8601 UTC timestamp of when this snapshot was assembled."
+    },
+    "tool": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "host": {
+      "type": "object",
+      "description": "The machine that performed the observation.",
+      "properties": {
+        "hostname": { "type": "string" },
+        "os": { "type": "string" },
+        "arch": { "type": "string" }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "description": "What was scanned, and how.",
+      "properties": {
+        "mode": { "type": "string", "enum": ["active", "passive", "hybrid", "single"] },
+        "iface": { "type": "string" },
+        "subnet": { "type": "string", "description": "CIDR, e.g. 192.168.1.0/24" },
+        "started_at": { "type": "string" },
+        "duration_s": { "type": "number" },
+        "requests_sent": { "type": "integer" },
+        "replies": { "type": "integer" }
+      }
+    },
+    "interfaces": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/interface" }
+    },
+    "lan": {
+      "type": "object",
+      "properties": {
+        "devices": { "type": "array", "items": { "$ref": "#/$defs/lanDevice" } },
+        "gateway": {
+          "type": "object",
+          "properties": {
+            "ip": { "type": "string" },
+            "mac": { "type": "string" }
+          }
+        },
+        "subnet": { "type": "string" },
+        "counts": { "type": "object" }
+      }
+    },
+    "usb": {
+      "type": "object",
+      "properties": {
+        "devices": { "type": "array", "items": { "$ref": "#/$defs/usbDevice" } },
+        "hubs": { "type": "integer" },
+        "supported": {
+          "type": "boolean",
+          "description": "false when the platform has no USB enumeration path (most notably macOS). The dashboard then says so instead of showing an empty table."
+        },
+        "counts": { "type": "object" }
+      }
+    },
+    "drivers": {
+      "type": "object",
+      "properties": {
+        "devices": { "type": "array", "items": { "$ref": "#/$defs/driverEntry" } },
+        "counts": { "type": "object" }
+      }
+    },
+    "system": { "$ref": "#/$defs/system" },
+    "tests": {
+      "type": "array",
+      "description": "Every probe LANScan ran this cycle, including the ones that found nothing. Failures are data.",
+      "items": { "$ref": "#/$defs/test" }
+    },
+    "updates": {
+      "type": "object",
+      "description": "Result of the local dependabot pass. See updates.sources.",
+      "properties": {
+        "pending": { "type": "integer" },
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Adapters consulted this cycle, e.g. ['local-manifest', 'pkg:apt', 'os:winget']. An adapter that made an outbound call is named here so the dashboard can say so out loud."
+        },
+        "checked_at": { "type": "string" },
+        "error": { "type": "string" }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "description": "Self-reported so the dashboard can show it rather than ask you to trust it.",
+      "properties": {
+        "telemetry": { "type": "boolean" },
+        "storage": { "type": "string" },
+        "network_calls": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Hosts this process contacted during the cycle. Empty means fully offline."
+        },
+        "binds": {
+          "type": "string",
+          "description": "The socket the service listens on. Must be a loopback address for the local-only guarantee to hold."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "update": {
+      "type": "object",
+      "description": "Per-item update verdict. Absent means 'this adapter does not cover this item', which is different from 'no update'.",
+      "properties": {
+        "available": { "type": "boolean" },
+        "current": { "type": "string" },
+        "latest": { "type": "string" },
+        "source": { "type": "string", "description": "Which adapter produced this verdict." },
+        "url": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "interface": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "ip": { "type": "string" },
+        "netmask": { "type": "string" },
+        "mac": { "type": "string" },
+        "mtu": { "type": "integer" },
+        "state": { "type": "string", "enum": ["up", "down", "unknown"] },
+        "speed_mbps": { "type": "number" },
+        "rx_bytes": { "type": "integer" },
+        "tx_bytes": { "type": "integer" },
+        "rx_bps": { "type": "number" },
+        "tx_bps": { "type": "number" },
+        "rx_errors": { "type": "integer" },
+        "tx_errors": { "type": "integer" }
+      }
+    },
+    "lanDevice": {
+      "type": "object",
+      "properties": {
+        "ip": { "type": "string" },
+        "mac": { "type": "string" },
+        "hostname": { "type": "string" },
+        "vendor": { "type": "string", "description": "Resolved from the OUI prefix." },
+        "kind": {
+          "type": "string",
+          "description": "Best-effort classification: gateway, router, nas, printer, camera, tv, console, speaker, phone, laptop, iot, unknown."
+        },
+        "os_guess": { "type": "string" },
+        "iface": { "type": "string" },
+        "is_gateway": { "type": "boolean" },
+        "is_self": { "type": "boolean" },
+        "state": { "type": "string", "enum": ["online", "offline", "new"] },
+        "rtt_ms": { "type": "number" },
+        "first_seen": { "type": "string" },
+        "last_seen": { "type": "string" },
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Which discovery legs saw it: arp, icmp, mdns, ssdp, ws-discovery, netbios."
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "port": { "type": "integer" },
+              "proto": { "type": "string" },
+              "name": { "type": "string" },
+              "banner": { "type": "string" },
+              "state": { "type": "string" }
+            }
+          }
+        },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "update": { "$ref": "#/$defs/update" }
+      }
+    },
+    "usbDevice": {
+      "type": "object",
+      "properties": {
+        "port": { "type": "string", "description": "Topology path, Linux style: 1-2.3.4" },
+        "vendor_id": { "type": "string" },
+        "product_id": { "type": "string" },
+        "vendor": { "type": "string" },
+        "product": { "type": "string" },
+        "device_class": { "type": "string" },
+        "subclass": { "type": "string" },
+        "protocol": { "type": "string" },
+        "serial": { "type": "string" },
+        "speed_mbps": { "type": "number" },
+        "max_power_ma": { "type": "number" },
+        "hub": { "type": "string" },
+        "product_firmware": { "type": "string" },
+        "driver": { "type": "string" },
+        "driver_version": { "type": "string" },
+        "update": { "$ref": "#/$defs/update" }
+      }
+    },
+    "driverEntry": {
+      "type": "object",
+      "properties": {
+        "device": { "type": "string", "description": "What the driver is bound to." },
+        "bus": { "type": "string", "description": "pci, usb, platform, virtio, net, block, unknown." },
+        "driver": { "type": "string" },
+        "version": { "type": "string" },
+        "provider": { "type": "string" },
+        "date": { "type": "string" },
+        "signed": { "type": "string", "enum": ["yes", "no", "unknown"] },
+        "update": { "$ref": "#/$defs/update" }
+      }
+    },
+    "system": {
+      "type": "object",
+      "properties": {
+        "os": { "type": "string" },
+        "kernel": { "type": "string" },
+        "arch": { "type": "string" },
+        "hostname": { "type": "string" },
+        "uptime_s": { "type": "number" },
+        "cpu": {
+          "type": "object",
+          "properties": {
+            "model": { "type": "string" },
+            "cores": { "type": "integer" },
+            "load_percent": { "type": "number" },
+            "temp_c": { "type": "number" }
+          }
+        },
+        "memory": {
+          "type": "object",
+          "properties": {
+            "total": { "type": "integer" },
+            "used": { "type": "integer" },
+            "available": { "type": "integer" },
+            "percent": { "type": "number" }
+          }
+        },
+        "disks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "mount": { "type": "string" },
+              "total": { "type": "integer" },
+              "used": { "type": "integer" },
+              "percent": { "type": "number" }
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "properties": {
+            "rx_bps": { "type": "number" },
+            "tx_bps": { "type": "number" }
+          }
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "target": { "type": "string" },
+        "status": { "type": "string", "enum": ["pass", "fail", "skip"] },
+        "duration_ms": { "type": "number" },
+        "detail": { "type": "string" }
+      }
+    }
+  }
+}

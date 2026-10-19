@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://transhumanists.github.io/schema/worldmap-data.schema.json",
+  "title": "Worldmap data contract",
+  "description": "Single source of truth for the invariants shared by the Python data validators (scripts/check_data.py) and the runtime predicates in assets/js/worldmap.js. The JS side hand-mirrors the constants here; CI parity tests in scripts/test_check_data.py fail the build when either side drifts.",
+  "version": "1.0.0",
+  "controls": {
+    "coordinate": {
+      "lat_min": -90,
+      "lat_max": 90,
+      "lon_min": -180,
+      "lon_max": 180,
+      "reject_null_island": true,
+      "reason": "Operational layers and fleet endpoints are never geocoded at load; (0,0) is the no-location marker and plotting it would draw a glowing halo over the Gulf of Guinea."
+    },
+    "layer_lifecycle": {
+      "status_values": [
+        "active",
+        "ongoing",
+        "concluded",
+        "inactive",
+        "ended",
+        "resolved"
+      ],
+      "date_pattern": "^\\d{4}(-\\d{2}){0,2}$",
+      "date_formats": [
+        "YYYY",
+        "YYYY-MM",
+        "YYYY-MM-DD"
+      ],
+      "empty_dates_allowed": true,
+      "status_mapping": "worldmap.js layerStatus: '' | 'active' | 'ongoing' -> active; any other value -> concluded",
+      "ordering_rule": "equal-precision ISO dates order lexicographically (start <= end); mixed precision is only flagged when the earliest possible start instant is after the latest possible end instant (a provably empty window).",
+      "zone_tier_radius": {
+        "major": 4.0,
+        "minor": 3.0,
+        "conflict": 2.5
+      },
+      "zone_tier_radius_note": "Radius in degrees at which a conflict zone of each significance tier is drawn. This block is the single source of truth: sync_layers.py reads it to size generated zones (TIER_RADIUS) and check_data.py reads it to validate curated zones (_ZONE_TIER_RADIUS). Both keep a literal fallback for a checkout with no schema, and tests assert those fallbacks still equal this table. A zone with no `tier` has no radius rule and must be rejected, because the silent fallback is the smallest value - which is how Ukraine, Gaza and the Red Sea ended up rendered smaller than the Sahel insurgency."
+    },
+    "events": {
+      "date_required": true,
+      "accepted_shapes": [
+        "YYYY-MM-DD",
+        "D-M-YYYY",
+        "D/M/YYYY",
+        "partial YYYY / YYYY-MM",
+        "ISO datetime (Date-constructor fallback)"
+      ],
+      "calendar_validity": true,
+      "coordinates": "Optional. An event that could not be geocoded is published WITHOUT a geolocation key rather than dropped - it keeps every non-map appearance and the map simply draws no dot for it. When present, lat/lon must be finite and in range, and (0,0) is REJECTED: that is the project's no-location marker, and using it as a coordinate publishes a dot in the Gulf of Guinea.",
+      "categories": [
+        "Biotechnology & Biohacking",
+        "Computing & AGI",
+        "Quantum Physics",
+        "Renewable Energy",
+        "Mobility & Logistics",
+        "Cybersecurity",
+        "Robotics & Drones",
+        "Spaceflight & Aeronautics",
+        "Military & Defense"
+      ],
+      "category_order": [
+        "Biotechnology & Biohacking",
+        "Computing & AGI",
+        "Quantum Physics",
+        "Renewable Energy",
+        "Mobility & Logistics",
+        "Cybersecurity",
+        "Robotics & Drones",
+        "Spaceflight & Aeronautics",
+        "Military & Defense"
+      ],
+      "subtones_description": "A category may render with more than one landmark colour, like the deployments layer's ground/fleet split. A record takes the secondary colour when its category is listed in `subtones` and it matches that category's `keywords`; everything else in the category takes the primary colour. Both colours always appear in the legend row, in order.",
+      "subtones": {
+        "Biotechnology & Biohacking": {
+          "primary": "Biotechnology",
+          "secondary": "Biohacking",
+          "keywords": [
+            "biohacking",
+            "biohack",
+            "cyborg",
+            "transhumanist",
+            "transhumanism",
+            "neuroprosthetic",
+            "neuroprosthesis",
+            "neural implant",
+            "neuralink",
+            "brain-computer interface",
+            "brain computer interface",
+            "neural interface",
+            "implant",
+            "bone-conductive",
+            "bone conductive",
+            "bone conduction",
+            "sensory substitution",
+            "cochlear",
+            "retinal prosthesis",
+            "retinal implant",
+            "prosthetic",
+            "prostheses",
+            "openwetware",
+            "body hacking",
+            "bodyhack",
+            "grinder",
+            "wearable computing",
+            "human-computer interface",
+            "human computer interface",
+            "augmented reality",
+            "brainwave",
+            "eeg headset",
+            "mind-machine",
+            "mind machine",
+            "sonic toothbrush",
+            "cyborgs"
+          ]
+        }
+      },
+      "category_rule": "Exactly one of controls.events.categories, matched case-sensitively. There is deliberately no catch-all bucket: sync_milestones.py folds upstream legacy names (CATEGORY_ALIASES, e.g. \"Quantum Gravity\" -> \"Quantum Physics\", \"Biotechnology\" -> \"Biotechnology & Biohacking\") into a canonical category, so every milestone has a colour, a legend row and a catalog filter. An unknown category fails validation instead of silently rendering as \"Other\"."
+    },
+    "worldmap_layers": {
+      "description": "Toggleable operational layers rendered by assets/js/worldmap.js. Distinct from controls.events.categories: a layer is a separate data list in world_layers.json with its own visibility preference, and is NOT a milestone category, so it never appears in a category dropdown or in catalog filtering.",
+      "layers": [
+        {
+          "key": "zones",
+          "legend_label": "Conflict Zones",
+          "data_key": "conflict_zones",
+          "shape": "ring",
+          "default_on": false
+        },
+        {
+          "key": "deployments",
+          "legend_label": "Ground & Fleet Deployments",
+          "data_key": "deployments",
+          "shape": "diamond",
+          "default_on": false,
+          "split_colors": [
+            "ground",
+            "fleet"
+          ],
+          "label_note": "Renamed from 'Ground Deployments & Fleet Movements': the old name described the mark rather than the layer and was long enough to wrap the legend frame on a phone."
+        },
+        {
+          "key": "alliance_dots",
+          "legend_label": "Alliance & Defence Policy",
+          "data_key": "alliance_dots",
+          "shape": "seal",
+          "default_on": false,
+          "nested": true,
+          "follows_parent": true,
+          "kinds": [
+            "accession",
+            "posture",
+            "mandate",
+            "industrial",
+            "capability"
+          ],
+          "layer_rule": "A dot SUBLAYER of the deployments row above, indented under it in the legend and gated by the same military filter, so it can never appear on its own. Its own switch defaults to ON because it follows its parent: the parent is off by default, so the effective default is still off, and a visitor who enables Ground & Fleet Deployments without touching this gets the seals rather than an unexplained absence. It is deliberately NOT a Military & Defense milestone category: those carry technical records (drone range, rocket performance, OSINT), while this carries the political decision itself - alliance accessions, posture changes, mandates and defence-industrial instruments.",
+          "shape_rule": "A seal has no route and no extent, so it renders as a square-in-ring mark rather than an arrow or an area ring. A movement whose `id` matches a seal's `id` is suppressed by the renderer, so promoting an entry from deployments to a seal never draws both."
+        },
+        {
+          "key": "crises",
+          "legend_label": "Crisis Zones",
+          "data_key": "crisis_zones",
+          "shape": "ring",
+          "default_on": false
+        },
+        {
+          "key": "human_rights",
+          "legend_label": "Human Rights Violations",
+          "data_key": "human_rights_violations",
+          "shape": "landmark",
+          "default_on": false
+        }
+      ],
+      "layer_rule": "Every layer defaults OFF and is dim/invisible until the user enables it, including Human Rights Violations. A landmark-shaped layer renders its entries with the same tooltip treatment as milestones rather than as a ring.",
+      "key_note": "'key' is the legend row / toggle name used by worldmap.js (the appendLayerRow key); 'data_key' is the top-level list in world_layers.json. They differ only for conflict zones, which the legend calls 'zones'."
+    }
+  },
+  "files": {
+    "events.json": {
+      "shape": "top-level object; events: list of { id, title, category, date, value?, source?, url?, geolocation?: { lat, lon }, located?: false, tone?, sources? }",
+      "rules": [
+        "date is required and calendar-valid per controls.events",
+        "category must be one of controls.events.categories",
+        "geolocation is OPTIONAL; when present it must be finite, in range, and not (0,0)",
+        "an unlocated event may carry \"located\": false as an informational marker; it is not required",
+        "tone, when present, is the secondary label of a two-tone category from controls.events.subtones",
+        "sources, when present, is a non-empty list naming every upstream that reported the result"
+      ]
+    },
+    "world_layers.json": {
+      "version": "1.3.0",
+      "shape": "top-level object with conflict_zones, deployments, alliance_dots, crisis_zones and human_rights_violations lists; fleet_movements accepted as the legacy alias for deployments. 1.2.0 added human_rights_violations, an optional toggleable landmark layer that is NOT a milestone category. 1.3.0 added alliance_dots, a dot sublayer of the deployments layer for alliance accessions, posture changes, mandates and defence-industrial instruments.",
+      "rules": [
+        "every zone/fleet entry name/label + located pair (not null island)",
+        "lifecycle status in status_values and dates per layer_lifecycle.date_pattern",
+        "every conflict zone declares a `tier` from layer_lifecycle.zone_tier_radius",
+        "a conflict zone's radiusDeg equals the radius its tier maps to",
+        "ids unique per list",
+        "every zone, fleet and seal carries `last_news_year` (or a start_date, which the renderer falls back to) - this is the recency signal the map's brightness ladder reads, and dropping it from normalisation is what made the Ukraine conflict zone render dimmed",
+        "top-level metadata: version equals this file's version and last_update is a non-empty ISO-8601 UTC timestamp (offset or Z)",
+        "human_rights_violations (1.2.0+): optional; when present each entry is a located pair (not null island), a status from status_values, and a unique id",
+        "alliance_dots (1.3.0+): optional; when present each entry has a unique id, a non-empty name, a located pair (not null island), a status from status_values, a `kind` from worldmap_layers.layers[alliance_dots].kinds, and an absent-or-http(s) `url`"
+      ],
+      "recency_note": "`last_news_year` is a recency PROXY, not a literal last-reported date. sync_layers.py stamps it for conflict zones; fetch_crisis_zones.py stamps it for any crisis zone still asserted active; curated seals carry no value and fall back to their own start year, which is what makes a 2024 accession glow and a 2017 one fade."
+    }
+  }
+}

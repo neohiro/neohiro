@@ -1,0 +1,592 @@
+/* site-forge.css — decor presets and the shared page shell.
+ *
+ * GENERATED-COMPANION FILE (hand-editable).
+ * Pairs with `assets/css/site-tokens.css`, which site_forge.py generates from
+ * `template-shared/sites.yaml`. This file holds no colours of its own: every
+ * value is a custom property, so switching a site to a different palette or a
+ * different decor preset never touches this stylesheet.
+ *
+ * Load order matters. site-tokens.css must come first so the generated custom
+ * properties win; this file only consumes them.
+ *
+ * Performance notes, because a background is the easiest place to tank a page:
+ *   - The grid and scanlines are two `repeating-linear-gradient` layers on a
+ *     single fixed-position pseudo-element. One composited layer, no repaint on
+ *     scroll, no JS.
+ *   - The grain is a 96x96 inline SVG data URI tiled by the browser. It costs
+ *     one decode and never touches the network.
+ *   - The aurora glow animates `transform` on a blurred layer only. Nothing
+ *     here animates layout properties.
+ *   - `content-visibility: auto` on lower page sections keeps a long article off
+ *     the critical rendering path.
+ *   - Every animation is disabled wholesale under prefers-reduced-motion, not
+ *     merely shortened.
+ */
+
+/* --------------------------------------------------------------------------
+ * Decor presets
+ *
+ * The class is applied to <body> by _layouts/default.html, taken from
+ * `page.decor_class` (a single page) or `site.decor_class` (site default). The
+ * names match `presets.decor` in sites.yaml.
+ * -------------------------------------------------------------------------- */
+
+.decor-matrix::before,
+.decor-aurora::before,
+.decor-plain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Both matrix and aurora sit on an opaque base so the page never shows a
+ * white flash before the palette loads. */
+.decor-matrix,
+.decor-aurora,
+.decor-plain {
+  background-color: var(--bg);
+  background-repeat: no-repeat;
+}
+
+/* --- matrix: the reference look. Perspective grid + drifting glow. --------- */
+.decor-matrix::before {
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--decor-grid-color, rgba(124, 77, 255, 0.1)) 0 1px,
+      transparent 1px 72px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--decor-grid-color, rgba(124, 77, 255, 0.1)) 0 1px,
+      transparent 1px 72px
+    );
+  /* Fade the grid out toward the bottom so it reads as depth, not a table. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+}
+
+/* The glow is its own element so it can drift without moving the grid. */
+.decor-matrix::after {
+  content: "";
+  position: fixed;
+  top: -20vh;
+  left: 50%;
+  width: min(120vw, 1400px);
+  height: 70vh;
+  z-index: -3;
+  pointer-events: none;
+  translate: -50% 0;
+  background: radial-gradient(
+    ellipse 60% 60% at 50% 40%,
+    var(--decor-glow, rgba(124, 77, 255, 0.22)) 0%,
+    transparent 70%
+  );
+  animation: decorDrift 24s ease-in-out infinite alternate;
+}
+
+/* --- scanlines: opt-in texture layer, on for matrix only ---------------- */
+.decor-scanlines::before {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.16) 0 1px,
+    transparent 1px 3px
+  );
+  opacity: 0.55;
+}
+
+/* --- grain: opt-in noise, breaks up the gradient banding ---------------- */
+.decor-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='96' height='96' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* --- aurora: soft drifting blooms, no grid ------------------------------ */
+.decor-aurora::before {
+  background-image:
+    radial-gradient(
+      ellipse 70% 50% at 18% 8%,
+      var(--decor-glow, rgba(157, 122, 255, 0.2)) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 60% 45% at 88% 22%,
+      color-mix(in srgb, var(--accent, #7c4dff) 16%, transparent) 0%,
+      transparent 60%
+    );
+  animation: decorAurora 30s ease-in-out infinite alternate;
+}
+
+/* --- plain: opaque, no layers. Still gets the base colour. --------------- */
+.decor-plain::before {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-elevated) 100%);
+}
+
+/* `.decor-matrix::after` is the glow; `.decor-grain::after` is the noise. When
+ * both apply, the noise wins the ::after slot, so the glow falls back to ::before
+ * being the grid. Rather than fight for the pseudo-element, the glow is layered
+ * into the matrix grid element's own background when grain is on. */
+.decor-matrix.decor-grain::before {
+  background-image:
+    radial-gradient(
+      ellipse 60% 40% at 50% 0%,
+      var(--decor-glow, rgba(124, 77, 255, 0.22)) 0%,
+      transparent 70%
+    ),
+    repeating-linear-gradient(
+      to right,
+      var(--decor-grid-color, rgba(124, 77, 255, 0.1)) 0 1px,
+      transparent 1px 72px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--decor-grid-color, rgba(124, 77, 255, 0.1)) 0 1px,
+      transparent 1px 72px
+    );
+}
+
+@keyframes decorDrift {
+  from { translate: -50% 0; opacity: 0.85; }
+  to   { translate: -46% 3vh; opacity: 1; }
+}
+
+@keyframes decorAurora {
+  from { background-position: 0% 0%, 0% 0%; opacity: 0.9; }
+  to   { background-position: 6% 4%, -6% -3%; opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+ * The page shell. `page.html` inherits each site's own default layout, so this
+ * is the only styling a generated page needs.
+ * -------------------------------------------------------------------------- */
+
+#matrix-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+}
+
+.site-header,
+.hero-avatar-tags,
+.mhero {
+  position: relative;
+  z-index: 5;
+}
+
+.page-shell {
+  /* Clear the fixed assistant bar (auth-bar.css) plus a little breathing room.
+   * The bar is ~52px tall; --ai-dock-h is set by auth-bar when the dock is up. */
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Deliberately NOT `.container`. Three of the four sites define that class with
+ * this exact geometry, but Open Stage Island does not define it at all, so
+ * reusing it would leave generated pages full-bleed there. Declaring our own
+ * wrapper keeps every generated page aligned to --max-width on all four sites
+ * without overriding a site's existing `.container` rule. */
+.page-wrap {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 680px) {
+  .page-wrap { padding: 0 16px; }
+}
+
+.page-hero {
+  position: relative;
+  margin: 0 0 40px;
+  padding: 48px 0 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Accent hairline along the top of the hero, the same device the tool cards
+ * use, so a generated page reads as part of the site rather than a bolt-on. */
+.page-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(180px, 40%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong, var(--accent)));
+}
+
+.page-hero h1 {
+  margin: 0 0 10px;
+  font-family: var(--font-ui, system-ui, sans-serif);
+  font-size: clamp(1.9rem, 1.35rem + 2.4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.page-hero .lede {
+  margin: 0;
+  max-width: 62ch;
+  font-family: var(--font-ui, system-ui, sans-serif);
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+/* Long articles: skip layout for anything below the fold. */
+.page-body > section {
+  content-visibility: auto;
+  /* Without an explicit size the browser cannot estimate the skipped box and
+   * scrollbar length jumps around; 600px tracks the section rhythm closely. */
+  contain-intrinsic-size: auto 600px;
+}
+
+.page-body h2 {
+  font-family: var(--font-ui, system-ui, sans-serif);
+  letter-spacing: -0.01em;
+}
+
+.page-body code,
+.page-body pre {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+/* --------------------------------------------------------------------------
+ * Motion + paint preferences. Honoured wholesale, not shortened.
+ * -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .decor-matrix::after,
+  .decor-aurora::before,
+  .decor-grain::after {
+    animation: none !important;
+  }
+  .decor-matrix.decor-grain::before,
+  .decor-aurora::before {
+    background-position: 50% 0%, 50% 0% !important;
+  }
+  /* The drift leaves ::after mid-transform; pin it so the glow stays put. */
+  .decor-matrix::after {
+    translate: -50% 0;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Print: drop every decorative layer. A grid and a glow cost ink and nothing
+ * else on paper.
+ * -------------------------------------------------------------------------- */
+@media print {
+  .decor-matrix::before,
+  .decor-matrix::after,
+  .decor-aurora::before,
+  .decor-grain::after {
+    display: none !important;
+  }
+  #matrix-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+}
+
+.site-header,
+.hero-avatar-tags,
+.mhero {
+  position: relative;
+  z-index: 5;
+}
+
+.page-shell {
+    padding-bottom: 0;
+  }
+}
+
+/* --- OS App Selector (Futuristic Vicinity-Blooming Dock & Grid) --- */
+.os-app-selector {
+  position: relative;
+  background: var(--surface, rgba(15, 19, 24, 0.9));
+  border: 1px solid var(--border, rgba(0, 229, 255, 0.25));
+  border-radius: 24px;
+  padding: 48px 40px;
+  margin: 48px 0;
+  overflow: hidden;
+  box-shadow:
+    0 24px 64px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(0, 229, 255, 0.08),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.os-app-selector::before {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background:
+    radial-gradient(ellipse 80% 60% at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 229, 255, 0.15), transparent 55%),
+    radial-gradient(ellipse 60% 80% at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 77, 255, 0.1), transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 0;
+}
+
+.os-app-selector:hover::before,
+.os-app-selector:focus-within::before {
+  opacity: 1;
+}
+
+.os-app-selector::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.4), transparent);
+  z-index: 1;
+}
+
+.os-app-header {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.os-app-header h2 {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text, #e8eef2);
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #00e5ff 0%, #7c4dff 50%, #ff0066 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.os-app-header p {
+  color: var(--muted, #8fa3b0);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.os-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 24px;
+  justify-items: center;
+  align-items: start;
+}
+
+.os-app-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 18px;
+  background: rgba(20, 28, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  text-decoration: none;
+  color: var(--text, #e8eef2);
+  width: 100%;
+  max-width: 170px;
+  transition:
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s,
+    box-shadow 0.3s,
+    background 0.3s;
+  will-change: transform;
+  transform: scale(var(--tile-scale, 1));
+  isolation: isolate;
+}
+
+.os-app-tile::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(0,229,255,0), rgba(124,77,255,0));
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+}
+
+.os-app-tile:hover {
+  border-color: rgba(0, 229, 255, 0.5);
+  background: rgba(0, 229, 255, 0.06);
+  box-shadow:
+    0 16px 48px rgba(0, 229, 255, 0.18),
+    0 0 0 1px rgba(0, 229, 255, 0.15),
+    inset 0 0 30px rgba(0, 229, 255, 0.08);
+  z-index: 10;
+}
+
+.os-app-tile:hover::before {
+  opacity: 1;
+  background: linear-gradient(135deg, rgba(0,229,255,0.4), rgba(124,77,255,0.3));
+}
+
+.os-app-tile:focus-visible {
+  outline: none;
+  border-color: #ff0066;
+  box-shadow: 0 0 0 3px rgba(255, 0, 102, 0.4);
+}
+
+.os-app-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 30% 30%, rgba(0, 229, 255, 0.25), transparent 60%),
+    linear-gradient(135deg, rgba(0, 229, 255, 0.12), rgba(124, 77, 255, 0.12));
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  color: var(--cyan, #00e5ff);
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s,
+    background 0.25s,
+    border-color 0.25s;
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.os-app-icon::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #00e5ff, #7c4dff, #ff0066);
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 0.3s;
+  z-index: -1;
+}
+
+.os-app-tile:hover .os-app-icon {
+  transform: scale(1.18);
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 30% 30%, rgba(0, 229, 255, 0.4), transparent 55%),
+    linear-gradient(135deg, #00e5ff, #7c4dff);
+  border-color: rgba(0, 229, 255, 0.6);
+  box-shadow:
+    0 0 30px rgba(0, 229, 255, 0.5),
+    0 8px 32px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.os-app-tile:hover .os-app-icon::after {
+  opacity: 0.6;
+}
+
+.os-app-icon svg {
+  width: 30px;
+  height: 30px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.os-app-tile:hover .os-app-icon svg {
+  transform: scale(1.1) rotate(-3deg);
+}
+
+.os-app-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  transition: color 0.2s;
+}
+
+.os-app-tile:hover .os-app-title {
+  color: #00e5ff;
+}
+
+.os-app-sub {
+  font-size: 10px;
+  color: var(--muted, #8fa3b0);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.os-app-tile .os-app-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,255,0.4), transparent 70%);
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.os-app-tile .os-app-ripple.active {
+  animation: os-ripple 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes os-ripple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+@media (max-width: 768px) {
+  .os-app-selector { padding: 32px 24px; }
+  .os-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .os-app-tile {
+    max-width: none;
+    padding: 18px 12px;
+  }
+  .os-app-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .os-app-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+  .os-app-title { font-size: 13px; }
+}
+@media (max-width: 480px) {
+  .os-grid { grid-template-columns: repeat(2, 1fr); }
+  .os-app-icon { width: 48px; height: 48px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-app-tile,
+  .os-app-icon,
+  .os-app-icon svg,
+  .os-app-selector::before {
+    transition: none !important;
+    animation: none !important;
+  }
+  .os-app-tile .os-app-ripple { display: none; }
+}

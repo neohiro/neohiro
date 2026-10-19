@@ -1,0 +1,45 @@
+<div class="footer-unified">
+  <!-- Quick Links & Legal Directory. -->
+  <div class="footer-columns">
+    <div class="footer-column">
+      <h3>Tooling & Systems</h3>
+      <ul>
+        <li><a href="{{ '/repositories/' | relative_url }}">All Public Repositories</a></li>
+        <li><a href="https://github.com/neohiro/windows" target="_blank" rel="noopener">Windows Hardening Guide</a></li>
+        <li><a href="https://github.com/neohiro/linux" target="_blank" rel="noopener">Linux Hardening Guide</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3>Media & Community</h3>
+      <ul>
+        <li><a href="{{ '/media/' | relative_url }}">Media & Deep Dives</a></li>
+        <li><a href="{{ '/onboard/' | relative_url }}">Setup & Onboarding</a></li>
+        <li><a href="{{ '/request-access/' | relative_url }}">Access Request</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column footer-column-community">
+      <h3>Trust & Governance</h3>
+      <ul>
+        <li><a href="{{ '/privacy/' | relative_url }}">Privacy Policy</a></li>
+        <li><a href="{{ '/tos/' | relative_url }}">Terms of Service</a></li>
+        <li><a href="https://github.com/neohiro/windows/security" target="_blank" rel="noopener">Security Advisories</a></li>
+        <li><a href="https://github.com/neohiro/neohiro.github.io/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a></li>
+      </ul>
+      <a href="https://github.com/sponsors/{{ site.github_username | default: 'neohiro' }}" class="footer-sponsor-button" target="_blank" rel="noopener">
+        <span class="heart-pulse" aria-hidden="true">&#9829;</span> Sponsor neohiro on GitHub
+      </a>
+    </div>
+  </div>
+
+  <!-- Bottom Tagline & Micro-Legal -->
+  <div class="footer-bottom-bar">
+    <p class="footer-tagline">
+      Made with <span class="heart" aria-hidden="true">♥</span> by neohiro · Defense is the best defense.
+    </p>
+    <p class="footer-micro">
+      © {{ site.time | date: "%Y" }} FrenzyPenguin Media & neohiro · All tools released under FOSS licenses (GPL-3.0 / MIT).
+    </p>
+  </div>
+</div>

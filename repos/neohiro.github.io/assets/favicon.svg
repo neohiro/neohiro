@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="100" height="100" rx="16" fill="#0b0e12"/>
+  <text x="50" y="58" dominant-baseline="central" text-anchor="middle" font-size="72">&#128125;</text>
+  <g transform="translate(98, 98)" font-family="monospace" text-anchor="end">
+    <a href="https://frenzypenguin-media.github.io" target="_blank">
+      <text y="-2" font-size="6.5" fill="#4d6480" letter-spacing="0.3">FrenzyPenguin Media</text>
+    </a>
+  </g>
+</svg>

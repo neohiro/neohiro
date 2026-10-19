@@ -1,0 +1,45 @@
+{
+  "name": "Open Stage Island",
+  "schema_version": "1.0",
+  "tagline": "A free, 24/7 open-air music stage in Second Life",
+  "description": "Open Stage Island is a free, 24/7 open-air music venue in Second Life. Any electronic music artist can take the stage and play to a live audience — no booking, no fee. Discover freebies, attend DJ school, and meet newcomers, LGBTQI+ residents, and furries in a magical-realism setting. The stage is yours whenever you want it.",
+  "destination_url": "https://secondlife.com/destination/open-stage-island",
+  "join_url": "https://join.secondlife.com/",
+  "region": "Derwent",
+  "coordinates": {
+    "x": 248,
+    "y": 128,
+    "z": 22
+  },
+  "slurl": "secondlife://Derwent/248/128/22",
+  "maps_url": "https://maps.secondlife.com/secondlife/Derwent/248/128/22",
+  "maturity_rating": "Moderate",
+  "category": "Music",
+  "established_year": 2021,
+  "established_source": "destination description (paraphrased; not authoritative)",
+  "features": [
+    "24/7 Open Air Stage",
+    "DJ School",
+    "Freebies",
+    "Interactive Experiences",
+    "Social Hub",
+    "Live DJ Performances"
+  ],
+  "community": [
+    "Newcomers Welcome",
+    "LGBTQI+ Friendly",
+    "Furry Friendly"
+  ],
+  "image": {
+    "source_url": "https://cdn.prod.website-files.com/60b00c7676794f6159eb4bf0/6818b14c9914eb3376692033_6818b13e1d51c647434435.png",
+    "local_path": "images/destination-image.png",
+    "width_px": 657,
+    "height_px": 394,
+    "alt": "Avatars gathered at the Open Stage Island outdoor music venue under laser lights",
+    "credit": "Second Life Destination Guide (secondlife.com)",
+    "license_note": "Image downloaded from Second Life's official destination page; used here for documentation/fair-use commentary."
+  },
+  "live_site": "https://openstageis.land/",
+  "scraped_at": "2026-08-29T00:00:00Z",
+  "page_last_published": "2026-08-28T17:20:14Z"
+}

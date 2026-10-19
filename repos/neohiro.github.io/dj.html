@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>neohiro / DJ</title>
+  <meta name="description" content="HearThis.at DJ streams by neohiro — free tekno, underground, transhumanism.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080a0e;
+      --surface: #0f1318;
+      --border: #1a2030;
+      --fg: #eceff1;
+      --fg-muted: #667788;
+      --accent: #7c4dff;
+      --accent2: #ff4088;
+      --teal: #00b4d8;
+    }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-wrap: wrap;
+    }
+    .topbar-brand {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--fg);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .topbar-brand span { color: var(--accent); }
+    .topbar-sep { color: var(--fg-muted); font-size: 0.875rem; }
+    .topbar-title { color: var(--fg-muted); font-size: 0.875rem; }
+    .topbar-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .container {
+      flex: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      width: 100%;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .hero-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    h1 {
+      font-size: clamp(1.75rem, 5vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--fg), var(--fg-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      color: var(--fg-muted);
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+    }
+    .hearthis-embed {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .hearthis-embed h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--fg);
+    }
+    .hearthis-placeholder {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border-radius: 12px;
+      padding: 32px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      display: block;
+    }
+    .hearthis-placeholder:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(124, 77, 255, 0.25);
+    }
+    .hearthis-placeholder h3 {
+      color: white;
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+    }
+    .hearthis-placeholder p {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.875rem;
+    }
+    .hearthis-placeholder .listen-label {
+      margin-top: 12px;
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .iframe-container {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .iframe-container iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+      display: block;
+    }
+    .streams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stream-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-decoration: none;
+      color: var(--fg);
+      display: block;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .stream-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .stream-card .label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .stream-card .name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .stream-card .desc {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+    .stream-card .tag {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.7rem;
+      background: rgba(124,77,255,0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .info-card h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .info-card p, .info-card li {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+    }
+    .info-card ul { list-style: none; margin-top: 6px; }
+    .info-card li::before { content: '→ '; color: var(--accent); }
+    .footer {
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-size: 0.8rem;
+    }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--fg-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+    .mobile-note {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+    @media (max-width: 600px) {
+      .streams-grid { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="https://neohiro.github.io" class="topbar-brand">neohiro <span>/</span></a>
+  <span class="topbar-sep">DJ</span>
+  <span class="topbar-badge">HearThis.at</span>
+</div>
+
+<div class="container">
+
+  <a href="https://neohiro.github.io" class="back-link">← Back to neohiro</a>
+
+  <div class="hero">
+    <div class="hero-icon">🎛️</div>
+    <h1>neohiro / DJ</h1>
+    <p class="subtitle">Free tekno, underground, transhumanism. Powered by HearThis.at.</p>
+  </div>
+
+  <div class="streams-grid">
+    <a class="stream-card" href="https://hearthis.at/neohiro/" target="_blank" rel="noopener">
+      <div class="label">Main Stream</div>
+      <div class="name">N3Vr0Tr4nsm1tt3r</div>
+      <div class="desc">Free tekno, hardtechno, acid, underground</div>
+      <span class="tag">🎵 Live when streaming</span>
+    </a>
+    <a class="stream-card" href="https://hearthis.at/neohiro/mixes/" target="_blank" rel="noopener">
+      <div class="label">Sets</div>
+      <div class="name">Live Sets</div>
+      <div class="desc">Recorded performances, curated sets</div>
+      <span class="tag">📼 On-demand</span>
+    </a>
+    <a class="stream-card" href="https://hearthis.at/neohiro/playlists/" target="_blank" rel="noopener">
+      <div class="label">Playlists</div>
+      <div class="name">Curated Playlists</div>
+      <div class="desc">Transhumanism, sci-fi, cyberpunk vibes</div>
+      <span class="tag">📋 Curated</span>
+    </a>
+  </div>
+
+  <div class="hearthis-embed">
+    <h2>Listen Now</h2>
+    <div class="iframe-container">
+      <iframe
+        src="https://hearthis.at/neohiro/widget/?parent=https%3A//neohiro.github.io/dj/"
+        allow="autoplay"
+        loading="lazy"
+        title="neohiro HearThis.at stream"
+        aria-label="HearThis.at audio player">
+      </iframe>
+    </div>
+    <p class="mobile-note">
+      On mobile? <a href="https://hearthis.at/neohiro/" target="_blank" rel="noopener" style="color:var(--accent)">Open HearThis.at directly</a> in your browser for the best experience.
+    </p>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <h3>About the DJ</h3>
+      <p>N3Vr0Tr4nsm1tt3r — CNS, the neurotransmitter of the neohiro Central Nervous System.</p>
+      <ul>
+        <li>Free tekno &amp; hardtechno</li>
+        <li>Underground &amp; acid</li>
+        <li>Transhumanism vibes</li>
+        <li>Automated by heartbeat cron</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Platform</h3>
+      <p>HearThis.at is an Austrian server-based audio streaming platform. No account required to listen.</p>
+      <ul>
+        <li>Direct MP3 streaming</li>
+        <li>No account needed</li>
+        <li>Mobile-optimized</li>
+        <li>Free tier supported</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Genres</h3>
+      <p>Primary focus on the underground electronic music spectrum.</p>
+      <ul>
+        <li>Free tekno</li>
+        <li>Hardtechno</li>
+        <li>Acid techno</li>
+        <li>Industrial</li>
+        <li>Coldwave</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Related</h3>
+      <p>Part of the neohiro / FrenzyPenguin Media ecosystem.</p>
+      <ul>
+        <li><a href="https://transhumanists.github.io/" style="color:var(--teal)">Transhumanists</a></li>
+        <li><a href="https://openstageis.land/" style="color:var(--teal)">Open Stage Island</a></li>
+        <li><a href="https://frenzypenguin-media.github.io/" style="color:var(--teal)">FrenzyPenguin Media</a></li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>
+    🎛️ <a href="https://hearthis.at/neohiro/" target="_blank" rel="noopener">HearThis.at / neohiro</a>
+    — Part of <a href="https://neohiro.github.io">neohiro</a>
+    · <a href="https://github.com/neohiro">GitHub</a>
+    · <a href="https://github.com/sponsors/neohiro">Sponsor</a>
+  </p>
+  <p style="margin-top:4px">— N3Vr0Tr4nsm1tt3r / CNS (Neurotransmitter on the Central Nervous System)</p>
+</div>
+
+</body>
+</html>

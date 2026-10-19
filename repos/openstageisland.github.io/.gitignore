@@ -1,0 +1,51 @@
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+_site/
+.cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+bower_components/
+
+# Python bytecode — produced when the .github/scripts gate tests import the
+# modules under test. Must never be committed or published.
+__pycache__/
+*.py[cod]
+
+# Append-only audit log — written every 5 min by counter-scrape workflow
+data/counter-events.ndjson
+
+# Temporary
+*.tmp
+*.bak
+
+
+# Generated locally by `jekyll build` / `bundle`. Not committed:
+# GitHub Pages resolves its own pinned gem set and only reads the Gemfile to
+# decide whether to run Bundler, so a committed lock file buys nothing and can
+# fail the Pages build with "Your Gemfile.lock is not compatible".
+Gemfile.lock

@@ -1,0 +1,72 @@
+name: Daily Crisis Zone Fetch
+
+on:
+  schedule:
+    # Run daily at 03:00 UTC (after UN OCHA/WHO overnight updates)
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Fetch and validate but skip commit"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  # Shared with milestone-check.yml so the two writers of world_layers.json
+  # are mutually exclusive; queued, never cancelled, so an in-flight commit is
+  # not interrupted mid-flight.
+  group: "map-data-writers"
+  cancel-in-progress: false
+
+jobs:
+  fetch-crisis-zones:
+    name: Fetch & Update Crisis Zones
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Fetch crisis zones from UN OCHA / WHO / ReliefWeb
+        run: |
+          python scripts/fetch_crisis_zones.py
+
+      - name: Validate world_layers.json
+        # Gate BEFORE the commit: a malformed candidate must never reach main.
+        # Runs on every invocation (dry_run is "fetch and validate, skip commit").
+        run: python scripts/check_data.py
+
+      - name: Commit and push changes
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/world_layers.json
+          if git diff --cached --quiet; then
+            echo "No crisis zone changes"
+            exit 0
+          fi
+          ts=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          git commit -m "chore(crisis-zones): daily refresh ${ts}"
+          # The remote can advance while this job runs (a scheduled run collides
+          # with a manual push). Rebase onto the latest main, then retry once;
+          # fail loudly rather than silently dropping a data refresh.
+          if git push origin main; then
+            echo "Pushed crisis zone refresh to main"
+          else
+            echo "Push rejected (remote moved?) - rebasing and retrying..."
+            git pull --rebase origin main
+            git push origin main
+            echo "Pushed crisis zone refresh to main (after rebase)"
+          fi

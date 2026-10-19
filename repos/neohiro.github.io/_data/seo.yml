@@ -1,0 +1,400 @@
+# _data/seo.yml -- single source of truth for this site's search surface.
+#
+# Everything the crawler-facing layer needs lives here, so that changing the
+# brand, the domain or the social handles is a one-file edit. Four things read
+# it, and all four are checked by scripts/check_seo.py:
+#
+#   _includes/seo-head.html   <title>, description, canonical, OG, Twitter, JSON-LD
+#   scripts/build_seo.py      _data/seo_graph.json, llms.txt, llms-full.txt
+#   scripts/make_og.py        assets/og/*.png
+#   llms.txt                  the AI-crawler manifest, generated from this file
+#
+# `origin` MUST equal `url:` in _config.yml. A canonical served from a different
+# host than the one the site is served from is the single most expensive SEO
+# mistake available -- it is not a warning, it is a silent de-index -- and it is
+# easy to make here because the repo is published at BOTH neohiro.github.io and
+# (historically) a vanity domain. check_seo.py fails the build on divergence.
+
+# Absolute origin, no trailing slash. Every canonical and og:url below is built
+# from this, never from page.url, so a baseurl change cannot corrupt them.
+origin: "https://neohiro.github.io"
+
+# Short brand string used in og:site_name, the JSON-LD Organization name and
+# the llms.txt H1. `brand_long` is the legal/display form.
+brand: "neohiro"
+brand_long: "neohiro"
+
+# The organization node in the JSON-LD graph. `type` matters: "Organization"
+# gets a knowledge-graph entity and rich results; "Person" gets the person
+# treatment. This is a GitHub account that owns repositories, so Organization is
+# the honest answer -- a Person node here would claim a human runs it.
+organization:
+  type: "Organization"
+  alternate_name: ["neohiro", "neohiro.github.io"]
+  # Free-text, used as the Organization description. Keep it a sentence a
+  # stranger would understand: this string is what an AI answer engine quotes.
+  description: >-
+    Open-source security hardening, privacy and developer tooling for Windows,
+    Linux and macOS. Encrypted DNS, network filtering, exploit mitigation,
+    LAN inventory, mesh networking keys and self-healing AI coding sessions.
+    Zero telemetry, no accounts, no data collection.
+  founding_date: "2020"
+  area_served: "Worldwide"
+  knows_about:
+    - "cybersecurity"
+    - "computer security"
+    - "exploit mitigation"
+    - "DNS encryption"
+    - "DNS-over-HTTPS"
+    - "DNS-over-TLS"
+    - "encrypted DNS"
+    - "network security"
+    - "network monitoring"
+    - "firewall configuration"
+    - "Windows security hardening"
+    - "Linux hardening"
+    - "Ubuntu hardening"
+    - "privacy tools"
+    - "graphical user interface"
+    - "GUI application"
+    - "automation"
+    - "shell automation"
+    - "PowerShell automation"
+    - "artificial intelligence"
+    - "AI developer tools"
+    - "LLM"
+    - "LoRa"
+    - "LoRaWAN"
+    - "LoRa mesh networking"
+    - "Meshtastic"
+    - "MeshCore"
+    - "offline-first software"
+    - "open source"
+    - "self-hosted"
+
+# The site node. `potentialAction` is deliberately omitted: there is no site
+# search, and advertising a SearchAction that 404s is worse than none.
+website:
+  type: "WebSite"
+  in_language: "en"
+  # Alternate/alias origins. Listed so crawlers that land on the .github.io
+  # host learn the canonical is this one. Empty aliases are ignored.
+  aliases: []
+
+# Social identity. `twitter` drives twitter:site + twitter:creator; `same_as`
+# becomes the Organization `sameAs` array, which is the single highest-value
+# field for entity resolution -- it is how a knowledge panel links this site to
+# the GitHub org rather than treating them as two unrelated things.
+social:
+  twitter: "neohiro"
+  bluesky: "https://bsky.app/profile/neohiro.bsky.social"
+  github: "https://github.com/neohiro"
+  mastodon: ""
+  youtube: ""
+  same_as:
+    - "https://github.com/neohiro"
+    - "https://bsky.app/profile/neohiro.bsky.social"
+    - "https://github.com/sponsors/neohiro"
+    - "https://frenzypenguin.media"
+    - "https://transhumanists.github.io/"
+    - "https://openstageis.land/"
+
+# Open Graph card. 1200x630 is the smallest size every major consumer accepts
+# without downscaling; `default` is used by every page that does not name its
+# own card, and the per-tool cards live in assets/og/tools/.
+og:
+  image: "/assets/og/neohiro.png"
+  width: 1200
+  height: 630
+  alt: "neohiro -- open-source security hardening, privacy and developer tooling for Windows, Linux and macOS"
+  twitter_card: "summary_large_image"
+
+# --- Topics -----------------------------------------------------------------
+#
+# These are the query families this site is allowed to claim. Every entry has to
+# be backed by something that actually ships: a tool in _tools/, a page on this
+# site, or an explicit roadmap note. A topical cluster with nothing behind it is
+# the fastest way to get a site classified as thin content, so `claim: roadmap`
+# exists to mark the ones that are not shipped yet -- they are excluded from the
+# JSON-LD `about` graph and surfaced in llms.txt as a roadmap section instead.
+#
+# `cluster` is what the page groups are; `page` is the route on this site that
+# serves it. A cluster with no `page` and claim:live would be a lie.
+topics:
+  - id: windows-hardening
+    label: "Windows security hardening"
+    claim: live
+    page: "/tools/harden-windows/"
+    summary: >-
+      One-command Windows 10/11 hardening: 18 modules, 4 profiles, allow-lists,
+      dry-run and full rollback.
+    keywords:
+      - "windows hardening"
+      - "windows 11 security"
+      - "harden windows 11"
+      - "STIG hardening"
+      - "windows security baseline"
+      - "windows exploit protection"
+      - "ASR rules"
+      - "control flow guard"
+      - "DEP"
+      - "SEHOP"
+  - id: linux-hardening
+    label: "Linux and Ubuntu hardening"
+    claim: live
+    page: "/tools/linux/"
+    summary: >-
+      Cross-distro and Ubuntu post-install hardening: UFW, DNSCrypt, Tor
+      routing, fail2ban, AppArmor/SELinux, sysctl and SSH.
+    keywords:
+      - "linux hardening"
+      - "ubuntu hardening"
+      - "debian hardening"
+      - "ufw firewall"
+      - "fail2ban"
+      - "apparmor"
+      - "selinux"
+      - "sysctl hardening"
+      - "ssh hardening"
+      - "post-install security"
+  - id: encrypted-dns
+    label: "Encrypted DNS"
+    claim: live
+    page: "/tools/dnscrypt-proxy-gui/"
+    summary: >-
+      DNSCrypt-proxy with a cross-platform GUI: encrypted DNS, anonymizing
+      resolvers, per-app split tunnelling and exact rollback.
+    keywords:
+      - "encrypted dns"
+      - "dns encryption"
+      - "dns over https"
+      - "dns over tls"
+      - "dnscrypt"
+      - "dnscrypt-proxy"
+      - "encrypted dns gui"
+      - "dns privacy"
+      - "dns sinkhole"
+      - "block ads at dns"
+  - id: network-security
+    label: "Network security and monitoring"
+    claim: live
+    page: "/tools/cripple-netstrip/"
+    summary: >-
+      Local network hardening, DNS sinkholing, per-process traffic
+      classification, passive honeypots and LAN device inventory.
+    keywords:
+      - "network security"
+      - "network monitoring"
+      - "firewall gui"
+      - "network hardening"
+      - "lan scanner"
+      - "lan inventory"
+      - "usb device inventory"
+      - "honeypot"
+      - "intrusion detection"
+      - "brute force detection"
+      - "iot malware"
+      - "traffic classification"
+  - id: developer-automation
+    label: "Developer automation and AI tooling"
+    claim: live
+    page: "/tools/auto-resume/"
+    summary: >-
+      Self-healing AI coding sessions: automatic retries, model rotation on
+      quota and outage, permission autopilot and walk-away task autonomy.
+    keywords:
+      - "ai coding assistant"
+      - "ai agent automation"
+      - "llm automation"
+      - "self-healing agent"
+      - "model rotation"
+      - "developer automation"
+      - "shell automation"
+      - "opencode plugin"
+      - "cli ai tool"
+      - "task automation"
+  - id: mesh-networking
+    label: "LoRa mesh networking"
+    claim: live
+    page: "/tools/mesh-vanity-key/"
+    summary: >-
+      In-browser Ed25519 vanity key generation for LoRa mesh networks:
+      MeshCore device keys, Meshtastic channel PSKs and node IDs.
+    keywords:
+      - "lora"
+      - "lorawan"
+      - "lora mesh networking"
+      - "meshtastic"
+      - "meshcore"
+      - "mesh network"
+      - "offline mesh"
+      - "ed25519"
+      - "vanity key"
+      - "vanity key generator"
+      - "channel psk"
+      - "node id"
+  - id: gui-tools
+    label: "Graphical tools for security administration"
+    claim: live
+    page: "/tools/"
+    summary: >-
+      Point-and-click front ends for the things that normally need a shell:
+      encrypted DNS, exploit mitigation, LAN inventory and system health.
+    keywords:
+      - "security gui"
+      - "firewall gui windows"
+      - "gui for dnscrypt"
+      - "windows security gui"
+      - "gui security tool"
+      - "no terminal security"
+  - id: debloating
+    label: "Windows debloating"
+    claim: roadmap
+    summary: >-
+      Planned: a reversible bloatware and pre-installed-app remover with a
+      per-app allow-list and full restore. Not shipped yet -- tracked on the
+      neohiro GitHub org.
+    keywords:
+      - "windows debloating"
+      - "debloat windows 11"
+      - "remove bloatware"
+      - "remove pre-installed apps"
+      - "windows debloat tool"
+
+# --- Tools ------------------------------------------------------------------
+#
+# `slug` is the _tools/<slug>.md filename, which is also the permalink segment
+# (/tools/<slug>/). `keywords` here are ADDITIONAL, tool-specific queries that
+# the topical clusters above do not cover. They end up in that tool's JSON-LD
+# `keywords` and in llms-full.txt.
+#
+# Only entries whose file actually exists in _tools/ are emitted; build_seo.py
+# fails on an orphan entry rather than shipping a keyword cluster that leads to a
+# 404.
+tools:
+  harden-windows:
+    keywords:
+      - "windows hardening script"
+      - "one command windows hardening"
+      - "windows hardening rollback"
+      - "windows hardening dry run"
+      - "windows stig"
+      - "windows security automation"
+      - "harden my pc"
+  cripple-netstrip:
+    keywords:
+      - "block ads at dns"
+      - "dns sinkhole"
+      - "network hardening tool"
+      - "per-process firewall"
+      - "traffic classification"
+      - "see every connection"
+      - "track every connection"
+      - "internet traffic monitor"
+      - "malware domain blocking"
+  dnscrypt-proxy-gui:
+    keywords:
+      - "dnscrypt proxy gui"
+      - "encrypted dns gui"
+      - "dns over https gui"
+      - "change dns gui"
+      - "dns switcher"
+      - "ad blocking dns windows"
+      - "dns leak protection"
+  exploitprotection:
+    keywords:
+      - "windows exploit protection"
+      - "exploit protection ultimate"
+      - "asr rules gui"
+      - "arbitrary code guard"
+      - "control flow guard"
+      - "sehop"
+      - "dep windows"
+      - "windows exploit mitigation gui"
+  lanscan:
+    keywords:
+      - "lan scanner"
+      - "scan local network"
+      - "find devices on network"
+      - "network device inventory"
+      - "usb device scanner"
+      - "driver inventory"
+      - "who is on my network"
+      - "arp scanner"
+      - "local network map"
+  HoneyScan:
+    keywords:
+      - "network honeypot"
+      - "home network security"
+      - "brute force detection"
+      - "port scan detector"
+      - "iot botnet detection"
+      - "passive intrusion detection"
+      - "raspberry pi security"
+  mesh-vanity-key:
+    keywords:
+      - "ed25519 vanity key"
+      - "meshtastic channel key"
+      - "meshcore device key"
+      - "lora node id"
+      - "vanity address generator"
+      - "offline key generator"
+      - "no upload key generation"
+  auto-resume:
+    keywords:
+      - "ai session resume"
+      - "llm retry automation"
+      - "model failover"
+      - "claude code alternative"
+      - "opencode plugin"
+      - "autonomous coding agent"
+      - "ai agent reliability"
+  linux:
+    keywords:
+      - "linux hardening guide"
+      - "ubuntu server security"
+      - "debian server hardening"
+      - "apparmor setup"
+      - "sysctl tuning"
+      - "ssh key only login"
+      - "tor transparent proxy"
+  ubuntu:
+    keywords:
+      - "ubuntu hardening script"
+      - "ubuntu post install"
+      - "snap flatpak control"
+      - "gnome privacy settings"
+      - "ubuntu firewall"
+  SystemMonitor:
+    keywords:
+      - "system monitor desktop"
+      - "cpu ram disk monitor"
+      - "gpu temperature monitor"
+      - "live system health"
+      - "pc performance monitor"
+  NewsAggregator:
+    keywords:
+      - "rss reader"
+      - "news aggregator"
+      - "atom feed reader"
+      - "offline news"
+      - "feed search"
+      - "self-hosted reader"
+  BlackGlass:
+    keywords:
+      - "second life chat"
+      - "second life client"
+      - "multi-client viewer"
+      - "second life im"
+      - "virtual world chat"
+      - "second life group chat"
+  
+ecosystem:
+  transhumanists:
+    description: >-
+      A live world map of scored human-progress milestones across biotechnology,
+      AGI, quantum physics, spaceflight, energy, cybersecurity and defense.
+  github-social:
+    description: >-
+      A decentralized social layer for this ecosystem: GitHub Social overlays,
+      a browser extension and a PWA.

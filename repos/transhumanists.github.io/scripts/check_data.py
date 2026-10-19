@@ -1,0 +1,1017 @@
+#!/usr/bin/env python3
+"""Validate the worldmap's data files against the shapes the front end consumes.
+
+Mirrors the runtime predicates in assets/js/worldmap.js (isPlottable,
+isZonePlottable, isFleetPlottable) so malformed data fails in CI instead of
+rendering silently-garbled layers (NaN dots/arrows) in production.
+
+Usage:
+    python scripts/check_data.py             # checks the repo's data/ directory
+    python scripts/check_data.py DIR...      # checks given dirs (each must hold
+                                             # events.json + world_layers.json)
+Exit code is 1 if any problem is found.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import re
+import sys
+from datetime import date as _date
+from datetime import datetime as _datetime
+from datetime import timedelta as _timedelta
+from datetime import timezone as _timezone
+from itertools import combinations
+from pathlib import Path
+
+# This module is executed both as `python scripts/check_data.py` and imported by the
+# test suite as `check_data`. The sibling import only resolves in the first case, so
+# make the script directory explicit rather than relying on sys.path[0].
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import location_contract as lc
+import milestone_identity
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT / "data"
+REQUIRED_FILES = ("events.json", "world_layers.json", "milestones.json")
+
+# Validated, but by a different function: the archive is a flat list of records
+# rather than a {categories: ...} document, so it cannot go through
+# check_milestones. It is still a published data file the map reads, so it gets the
+# same field and geolocation enforcement rather than being exempt by omission.
+ARCHIVE_FILES = ("milestones_history.json",)
+
+# Read by the browser but shaped differently again: a bucketed time series plus a
+# spikes list. dashboard.js calls `d.date.startsWith(year)` on every entry, so one
+# malformed date there throws inside the activity chart with no validator to notice.
+ACTIVITY_FILES = ("activity.json",)
+
+# The hand-curated historical catalog. scrape_historical_milestones.py has always
+# had a validator for it, but it was only ever pointed at synthetic fixtures - the
+# shipped 43-entry catalog itself was read by CI exactly once it failed mid-ingest.
+CATALOG_FILES = ("historical_milestones.json",)
+
+# Single source of truth for the data contract (schema/worldmap-data.schema.json).
+# The defaults below keep this module runnable if the schema is ever removed,
+# but the parity tests in test_check_data.py fail loudly in CI on any drift.
+_SCHEMA_FILE = ROOT / "schema" / "worldmap-data.schema.json"
+_SCHEMA = json.loads(_SCHEMA_FILE.read_text(encoding="utf-8")) if _SCHEMA_FILE.exists() else {}
+
+_COORD_CTRL = _SCHEMA.get("controls", {}).get("coordinate", {})
+_LAT_MIN = float(_COORD_CTRL.get("lat_min", -90.0))
+_LAT_MAX = float(_COORD_CTRL.get("lat_max", 90.0))
+_LON_MIN = float(_COORD_CTRL.get("lon_min", -180.0))
+_LON_MAX = float(_COORD_CTRL.get("lon_max", 180.0))
+
+_LIFECYCLE_CTRL = _SCHEMA.get("controls", {}).get("layer_lifecycle", {})
+_STATUS_VALUES = set(
+    _LIFECYCLE_CTRL.get(
+        "status_values", ["active", "ongoing", "concluded", "inactive", "ended", "resolved"]
+    )
+)
+_DATE_RE = re.compile(_LIFECYCLE_CTRL.get("date_pattern", r"^\d{4}(-\d{2}){0,2}$"))
+
+# The only categories an event may carry. Deliberately no catch-all: an unknown
+# category is a data bug, and quietly rendering it as "Other" hides it. Legacy
+# upstream names are folded into these by CATEGORY_ALIASES in sync_milestones.py.
+_CATEGORIES = _SCHEMA.get("controls", {}).get("events", {}).get("categories", [])
+_CATEGORY_SET = set(_CATEGORIES)
+
+# The schema version world_layers.json must carry (written by sync_layers.py /
+# fetch_crisis_zones.py, declared once in schema/worldmap-data.schema.json).
+_FILE_VERSION = _SCHEMA.get("files", {}).get("world_layers.json", {}).get("version", "1.1.0")
+
+
+def _is_number(v: object) -> bool:
+    # JSON has no NaN/Infinity literal, but "1e400" parses to float('inf');
+    # reject that *and* bool, exactly like Number.isFinite on the JS side.
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(float(v))
+
+
+def _why_unlocated(geo) -> str:
+    """Name the specific reason a coordinate is unusable.
+
+    "must be a finite lat/lon pair in range" and "this is the no-location marker" are
+    different bugs with different fixes, and a validator that says only one of them
+    sends people looking in the wrong place.
+    """
+    if not isinstance(geo, dict):
+        return "must be an object with lat and lon, or omitted entirely"
+    lat, lon = geo.get("lat"), geo.get("lon")
+    if (
+        not isinstance(lat, (int, float))
+        or not isinstance(lon, (int, float))
+        or isinstance(lat, bool)
+        or isinstance(lon, bool)
+    ):
+        return "lat and lon must both be numbers"
+    if not (_coord_ok(lat, lon)):
+        return "must be a finite lat/lon pair in range"
+    return (
+        f"({lat}, {lon}) is the no-location marker; omit the key instead of publishing null island"
+    )
+
+
+def _coord_ok(lat: object, lon: object) -> bool:
+    return (
+        _is_number(lat)
+        and _LAT_MIN <= float(lat) <= _LAT_MAX
+        and _is_number(lon)
+        and _LON_MIN <= float(lon) <= _LON_MAX
+    )
+
+
+def _coord_located(lat: object, lon: object) -> bool:
+    # Layers are never geocoded at load time, so the origin — the "no location"
+    # marker — must not be accepted: it would plot a glowing halo over Null Island
+    # (Gulf of Guinea) and mislead readers. worldmap.js applies the same rule
+    # through hasPlottableCoords(), and the parity suite keeps the two in step.
+    return lc.is_located({"lat": lat, "lon": lon})
+
+
+# Layer lifecycle schema (drives the fluo/dim rendering + duration tooltips in
+# the worldmap): status must be one of the known values and the date fields must
+# be sane. Empty/absent fields are allowed (active layers may have no end date).
+# The status list and date regex are loaded from schema/worldmap-data.schema.json
+# (see the constants computed above).
+
+
+def _valid_date(value: object) -> bool:
+    if value is None or value == "":
+        return True
+    if not isinstance(value, str):
+        return False
+    s = value.strip()
+    if not _DATE_RE.fullmatch(s):
+        return False
+    parts = s.split("-")
+    if len(parts) >= 2 and not 1 <= int(parts[1]) <= 12:
+        return False
+    if len(parts) == 3:
+        try:
+            _date.fromisoformat(s)
+        except ValueError:
+            return False
+    return True
+
+
+def _month_end(ym: str) -> str:
+    year, month = ym.split("-")
+    if month == "12":
+        return f"{year}-12-31"
+    next_month = _date.fromisoformat(f"{year}-{int(month) + 1:02d}-01")
+    return (next_month - _timedelta(days=1)).isoformat()
+
+
+def _date_bounds(value: str) -> tuple[str, str]:
+    """Earliest and latest ISO dates a partial date (YYYY or YYYY-MM) could
+    represent; full dates bound to themselves. Caller guarantees a valid date."""
+    s = value.strip()
+    if len(s) == 4:
+        return f"{s}-01-01", f"{s}-12-31"
+    if len(s) == 7:
+        return f"{s}-01", _month_end(s)
+    return s, s
+
+
+def _today_iso() -> str:
+    # UTC so validation is identical on every machine/CI runner: a date that just
+    # rolled over locally must not flip a "has already passed" verdict elsewhere.
+    return _datetime.now(_timezone.utc).replace(microsecond=0).isoformat()[:10]
+
+
+def _check_lifecycle(kind: str, i: int, item: dict) -> list[str]:
+    issues: list[str] = []
+    status = item.get("status")
+    if status is not None and (
+        not isinstance(status, str) or status.strip().lower() not in _STATUS_VALUES
+    ):
+        issues.append(f"{kind}[{i}]: status must be one of {sorted(_STATUS_VALUES)}")
+    for field in ("start_date", "end_date"):
+        if not _valid_date(item.get(field)):
+            issues.append(f"{kind}[{i}]: {field} must be YYYY-MM-DD, YYYY-MM or YYYY")
+    start = item.get("start_date")
+    end = item.get("end_date")
+    # Ordering semantics (same-length ISO partial dates order lexicographically):
+    #   * equal precision -> start > end is an unambiguous inversion.
+    #   * mixed precision -> flag only a PROVABLE inversion: the earliest instant
+    #     the start could be is after the latest instant the end could be
+    #     (e.g. start "2025" vs end "2024-12" is an empty window whatever the
+    #     real day; start "2024" vs end "2024-06-30" stays valid/unflagged).
+    if (
+        isinstance(start, str)
+        and isinstance(end, str)
+        and _valid_date(start)
+        and _valid_date(end)
+        and start.strip()
+        and end.strip()
+    ):
+        s, e = start.strip(), end.strip()
+        if len(s) == len(e):
+            if s > e:
+                issues.append(f"{kind}[{i}]: start_date must not be after end_date")
+        else:
+            start_min, _ = _date_bounds(s)
+            _, end_max = _date_bounds(e)
+            if start_min > end_max:
+                issues.append(f"{kind}[{i}]: start_date is after end_date (empty window)")
+    # Semantic rules for ZONES (not fleets, which keep their own lifecycle):
+    # a concluded/ended zone without an end_date would stay on the timeline
+    # forever (violating the "drops off after its end year" contract), an
+    # active zone whose end_date has already passed is a contradiction the
+    # writers must resolve by flipping it to concluded instead, and a
+    # concluded zone with a future end_date was concluded prematurely.
+    if kind in ("conflict_zones", "crisis_zones"):
+        status_norm = status.strip().lower() if isinstance(status, str) else ""
+        concluded_family = status_norm in {"concluded", "inactive", "ended", "resolved"}
+        if concluded_family and not (isinstance(end, str) and end.strip()):
+            issues.append(f"{kind}[{i}]: {status_norm!r} zone must carry an end_date")
+        if not concluded_family and status_norm in {"active", "ongoing", ""}:
+            if (
+                isinstance(end, str)
+                and end.strip()
+                and _valid_date(end)
+                and _date_bounds(end)[1] < _today_iso()
+            ):
+                issues.append(
+                    f"{kind}[{i}]: status {status_norm!r} but end_date {end.strip()} has already passed"
+                )
+        elif concluded_family:
+            if (
+                isinstance(end, str)
+                and end.strip()
+                and _valid_date(end)
+                and _date_bounds(end)[0] > _today_iso()
+            ):
+                issues.append(
+                    f"{kind}[{i}]: concluded zone end_date {end.strip()} lies in the future"
+                )
+    return issues
+
+
+def _check_unique_ids(kind: str, items: list) -> list[str]:
+    issues: list[str] = []
+    seen: dict[str, int] = {}
+    for i, item in enumerate(items):
+        if isinstance(item, dict):
+            ident = item.get("id")
+            if isinstance(ident, str) and ident:
+                if ident in seen:
+                    issues.append(f"{kind}: duplicate id {ident!r} (entries {seen[ident]} and {i})")
+                else:
+                    seen[ident] = i
+    return issues
+
+
+def _valid_event_date(value: object) -> bool:
+    # Mirrors the shapes worldmap.js parseDateToISO accepts (YYYY-MM-DD,
+    # D-M-YYYY / D/M/YYYY, plus a Date-constructor fallback covering partial
+    # YYYY / YYYY-MM), but enforces calendar validity so fake dates such as
+    # "2026-02-30" fail CI instead of rendering non-dates on the map.
+    if not isinstance(value, str):
+        return False
+    s = value.strip()
+    ym = re.fullmatch(r"(\d{4})-(\d{2})", s)
+    if ym:
+        year, month = int(ym[1]), int(ym[2])
+        return 1 <= year <= 9999 and 1 <= month <= 12
+    if re.fullmatch(r"\d{4}", s):
+        return True
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        try:
+            _date(int(m[1]), int(m[2]), int(m[3]))
+            return True
+        except ValueError:
+            return False
+    m = re.fullmatch(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", s)
+    if m:
+        try:
+            _date(int(m[3]), int(m[2]), int(m[1]))
+            return True
+        except ValueError:
+            return False
+    try:
+        _datetime.fromisoformat(s)
+        # JS `new Date()` rejects separator-less basic formats (e.g. "20260315",
+        # "20260315T100000") that fromisoformat happily accepts; keep the
+        # validator aligned with what the map can actually render.
+        return "-" in s or ":" in s or "/" in s or " " in s
+    except ValueError:
+        return False
+
+
+# The map, the dashboard and the widgets all gate their source links on
+# /^https?:\/\//i before assigning href, so any other scheme renders as a
+# silently missing "View source" link instead of a catchable error. Milestone
+# URLs arrive from the upstream repo via sync_milestones.archive_record, which
+# passes url straight through, so validate the scheme here where it fails CI
+# rather than in the browser. Deliberately the renderers' own prefix test and not
+# something stricter, so this gate can never reject data the front end accepts.
+# An absent URL stays legal: the link is simply omitted.
+_SOURCE_URL_RE = re.compile(r"^https?://", re.IGNORECASE)
+
+
+def _valid_source_url(value: object) -> bool:
+    if value is None or value == "":
+        return True
+    if not isinstance(value, str):
+        return False
+    return _SOURCE_URL_RE.match(value.strip()) is not None
+
+
+# Ceiling on duplicate-report findings. If this fires the data is broken in bulk,
+# and printing one line per colliding pair would produce a six-figure log and a
+# multi-second validation step; the count is reported instead.
+_MAX_DUP_ISSUES = 50
+
+# Bucket size past which the whole collision is reported as one finding instead of
+# comparing pairs. Pairwise corroboration is only meaningful while the candidates
+# could plausibly be distinct results; beyond this the bucket is bulk-duplicate.
+_MAX_DUP_BUCKET = 25
+
+
+def check_duplicate_reports(events: list) -> list[str]:
+    """No two events may report the same metric on the same date.
+
+    Enforces exactly the rule sync_milestones.unify_duplicate_milestones applies,
+    via the shared milestone_identity helpers: identical date + value + category is
+    what makes two records the same reported result, and they must additionally
+    corroborate each other (shared specific URL or shared content title token).
+    Published events drop `unit`, so this keys without it - the one asymmetry
+    between the two callers, declared at the call site in milestone_identity.
+
+    A surviving group means the dashboard counts one breakthrough twice and the map
+    stacks two dots on one location, so it is a data bug rather than a cosmetic
+    one.
+    """
+    issues: list[str] = []
+    if not isinstance(events, list):
+        return []
+    buckets: dict[tuple, list] = {}
+    for ev in events:
+        if not isinstance(ev, dict):
+            continue
+        key = milestone_identity.report_group_key(ev, include_unit=False)
+        if key is None:
+            continue
+        buckets.setdefault(key, []).append(ev)
+
+    for key, group in buckets.items():
+        if len(group) < 2:
+            continue
+        if len(group) > _MAX_DUP_BUCKET:
+            # A bucket this large is itself the finding: far more records claim the
+            # identical metric on the identical date than could be distinct
+            # results. Reporting the collision avoids a quadratic scan over data
+            # that is already known-broken, and points at the upstream source
+            # rather than at individual pairs.
+            issues.append(
+                f"{len(group)} records report the same metric on {key[0]} "
+                f"(value={key[1]}, category={key[-1]}); every one is a suspected "
+                "duplicate - fix the upstream source"
+            )
+            if len(issues) >= _MAX_DUP_ISSUES:
+                break
+            continue
+        # Delegates to the same predicate the unifier applies, so the validator
+        # cannot disagree with the merge about what counts as a duplicate.
+        for a, b in combinations(group, 2):
+            if milestone_identity.same_report(a, b):
+                issues.append(
+                    f"duplicate report for date={key[0]} value={key[1]} "
+                    f"category={key[-1]}: {a.get('id')} and {b.get('id')} "
+                    f"({a.get('title')!r} / {b.get('title')!r})"
+                )
+                if len(issues) >= _MAX_DUP_ISSUES:
+                    break
+        if len(issues) >= _MAX_DUP_ISSUES:
+            break
+    if len(issues) >= _MAX_DUP_ISSUES:
+        issues.append(
+            f"...duplicate-report findings capped at {_MAX_DUP_ISSUES}; "
+            "the feed is broadly duplicated, fix the upstream source"
+        )
+    return issues
+
+
+def check_event_ordering(events: list) -> list[str]:
+    """The published event list must be newest-first.
+
+    merge_feed() sorts by (date, category, title) descending and every consumer
+    inherits that order: build_events() writes it straight into events.json, the
+    dashboard's "recent highlights" carousel renders in list order, and the map
+    picks a co-located stack's lead member from event order. A transform in the
+    middle of the pipeline that regroups (rather than filters) therefore unsorts
+    the feed without tripping any per-record check - which is exactly how a
+    duplicate-unification step shipped once with the newest milestone buried at
+    index 54. Validated here so it cannot ship again.
+    """
+    issues: list[str] = []
+    if not isinstance(events, list):
+        return []
+    dates = [
+        e.get("date") for e in events if isinstance(e, dict) and isinstance(e.get("date"), str)
+    ]
+    for i in range(1, len(dates)):
+        if dates[i] > dates[i - 1]:
+            issues.append(
+                f"events are not newest-first: position {i} ({dates[i]}) is later than "
+                f"position {i - 1} ({dates[i - 1]})"
+            )
+            # One report is enough; a fully reversed list would emit hundreds.
+            break
+    return issues
+
+
+def check_events(events: object) -> list[str]:
+    issues: list[str] = []
+    if not isinstance(events, list):
+        return ["events must be a list"]
+    for i, ev in enumerate(events):
+        if not isinstance(ev, dict):
+            issues.append(f"events[{i}]: entry must be an object")
+            continue
+        if not isinstance(ev.get("title"), str):
+            issues.append(f"events[{i}]: title must be a string")
+        if not isinstance(ev.get("category"), str):
+            issues.append(f"events[{i}]: category must be a string")
+        elif _CATEGORY_SET and ev["category"] not in _CATEGORY_SET:
+            issues.append(
+                f"events[{i}]: category {ev['category']!r} is not one of {sorted(_CATEGORY_SET)}"
+            )
+        if not _valid_event_date(ev.get("date")):
+            issues.append(f"events[{i}]: date must be a parseable date string")
+        if not _valid_source_url(ev.get("url")):
+            issues.append(
+                f"events[{i}]: url must be absent or an http(s) URL, got {ev.get('url')!r}"
+            )
+        # A milestone that could not be geocoded is published WITHOUT a
+        # geolocation rather than dropped, so this key is optional. When it is
+        # present it must be a real located pair, and (0,0) is explicitly
+        # rejected: it is the project's "no location" marker, and emitting it as a
+        # coordinate puts a glowing dot in the Gulf of Guinea.
+        geo = ev.get("geolocation")
+        if geo is not None and lc.is_unlocated(geo):
+            issues.append(f"events[{i}]: geolocation: " + _why_unlocated(geo))
+        # Absent geolocation means unlocated, which is valid: the milestone is
+        # published without a dot. The optional `located: false` flag the pipeline
+        # emits is informational, and is not required - legacy and hand-authored
+        # payloads predate it, and the same way this module accepts both
+        # `deployments` and `fleet_movements`.
+    # List-level invariants. Checked after the per-record pass so a malformed
+    # record cannot make the ordering comparison itself throw.
+    if not issues:
+        issues.extend(check_event_ordering(events))
+        issues.extend(check_duplicate_reports(events))
+    return issues
+
+
+def check_zones(zones: object, kind: str = "conflict_zones") -> list[str]:
+    issues: list[str] = []
+    if not isinstance(zones, list):
+        return [f"{kind} must be a list"]
+    for i, z in enumerate(zones):
+        if not isinstance(z, dict):
+            issues.append(f"{kind}[{i}]: entry must be an object")
+            continue
+        if not isinstance(z.get("name"), str):
+            issues.append(f"{kind}[{i}]: name must be a string")
+        if not _coord_located(z.get("lat"), z.get("lon")):
+            issues.append(f"{kind}[{i}]: lat/lon must be located (finite, in range, not 0,0)")
+        if not _valid_source_url(z.get("url")):
+            issues.append(
+                f"{kind}[{i}]: url must be absent or an http(s) URL, got {z.get('url')!r}"
+            )
+        issues.extend(_check_lifecycle(kind, i, z))
+    issues.extend(_check_unique_ids(kind, zones if isinstance(zones, list) else []))
+    return issues
+
+
+# Radius a zone of each significance tier is drawn at. Read from the schema, which
+# is the single source of truth for this table: sync_layers sizes every generated
+# zone from it, and curated zones are validated against it here. It previously
+# lived as a second hand-written copy in each file, with a comment admitting they
+# were meant to mirror each other - which is how they would have drifted.
+#
+# Three zones were committed with no `tier` at all and therefore no radius rule,
+# which silently defaulted them to the smallest value - so Ukraine, Gaza and the
+# Red Sea rendered smaller than the Sahel insurgency. That is the failure this
+# rule now prevents.
+_ZONE_TIER_RADIUS = dict(
+    _LIFECYCLE_CTRL.get("zone_tier_radius") or {"major": 4.0, "minor": 3.0, "conflict": 2.5}
+)
+
+
+def _check_zone_tier_radius(items: list, kind: str) -> list[str]:
+    """A zone's declared tier must agree with the radius it is drawn at."""
+    issues: list[str] = []
+    for i, zone in enumerate(items):
+        if not isinstance(zone, dict):
+            continue
+        tier = zone.get("tier")
+        radius = zone.get("radiusDeg")
+        if tier is None:
+            issues.append(
+                f"{kind}[{i}] ({zone.get('id')}): no `tier`, so the radius defaults to "
+                f"the smallest value; declare one of {sorted(_ZONE_TIER_RADIUS)}"
+            )
+            continue
+        if tier not in _ZONE_TIER_RADIUS:
+            issues.append(f"{kind}[{i}] ({zone.get('id')}): unknown tier {tier!r}")
+            continue
+        expected = _ZONE_TIER_RADIUS[tier]
+        if isinstance(radius, (int, float)) and radius != expected:
+            issues.append(
+                f"{kind}[{i}] ({zone.get('id')}): tier {tier!r} should be drawn at "
+                f"radiusDeg {expected}, but the record says {radius}"
+            )
+    return issues
+
+
+def check_crisis_zones(zones: object) -> list[str]:
+    # Crisis zones share the conflict-zone contract consumed by the front end
+    # (normalizeZone/isLayerActive), so they must satisfy the same checks.
+    return check_zones(zones, kind="crisis_zones")
+
+
+def check_fleets(fleets: object, kind: str = "deployments") -> list[str]:
+    issues: list[str] = []
+    if not isinstance(fleets, list):
+        return [f"{kind} must be a list"]
+    for i, f in enumerate(fleets):
+        if not isinstance(f, dict):
+            issues.append(f"{kind}[{i}]: entry must be an object")
+            continue
+        dep_kind = f.get("kind", "")
+        is_infantry = dep_kind in ("infantry", "mobilization", "deployment", "rotation")
+        if is_infantry:
+            # Infantry deployments use lat/lon instead of from/to
+            if not _coord_located(f.get("lat"), f.get("lon")):
+                issues.append(
+                    f"{kind}[{i}]: lat/lon must be a located coordinate (finite, in range, not 0,0)"
+                )
+        else:
+            # Fleet/ground movements use from/to
+            if not _coord_located(
+                f.get("from", {}).get("lat") if isinstance(f.get("from"), dict) else None,
+                f.get("from", {}).get("lon") if isinstance(f.get("from"), dict) else None,
+            ):
+                issues.append(
+                    f"{kind}[{i}]: from must be a located lat/lon pair (finite, in range, not 0,0)"
+                )
+            if not _coord_located(
+                f.get("to", {}).get("lat") if isinstance(f.get("to"), dict) else None,
+                f.get("to", {}).get("lon") if isinstance(f.get("to"), dict) else None,
+            ):
+                issues.append(
+                    f"{kind}[{i}]: to must be a located lat/lon pair (finite, in range, not 0,0)"
+                )
+        issues.extend(_check_lifecycle(kind, i, f))
+    issues.extend(_check_unique_ids(kind, fleets if isinstance(fleets, list) else []))
+    return issues
+
+
+def check_milestones(data: object) -> list[str]:
+    """Validate the canonical milestones archive that feeds the dashboard,
+    widgets, and the timeline slider's year clustering. Mirrors the shapes
+    the front end expects in assets/js/neohiro-widgets.js and the timeline
+    code in assets/js/worldmap.js."""
+    issues: list[str] = []
+    if not isinstance(data, dict):
+        return ["top-level JSON must be an object"]
+    # Header check: version (any semver), last_update (required ISO-8601 UTC)
+    version = data.get("version")
+    if not isinstance(version, str) or re.fullmatch(r"\d+\.\d+\.\d+", version) is None:
+        issues.append(f"version must be a semver string, got {version!r}")
+    last_update = data.get("last_update")
+    if not isinstance(last_update, str) or not last_update:
+        issues.append("last_update must be a non-empty UTC timestamp string")
+    else:
+        try:
+            ts = _datetime.fromisoformat(last_update.replace("Z", "+00:00"))
+        except ValueError:
+            issues.append(f"last_update {last_update!r} is not parseable as an ISO-8601 timestamp")
+        else:
+            if ts.tzinfo is None or ts.tzinfo.utcoffset(ts) is None:
+                issues.append("last_update must carry a UTC offset (e.g. +00:00 or Z)")
+    cats = data.get("categories")
+    if not isinstance(cats, dict):
+        issues.append("categories must be an object")
+    else:
+        for cat_key, cat in cats.items():
+            if not isinstance(cat, dict):
+                issues.append(f"categories[{cat_key}]: must be an object")
+                continue
+            milestones = cat.get("milestones")
+            if not isinstance(milestones, list):
+                issues.append(f"categories[{cat_key}].milestones: must be a list")
+                continue
+            for i, m in enumerate(milestones):
+                if not isinstance(m, dict):
+                    issues.append(f"categories[{cat_key}].milestones[{i}]: entry must be an object")
+                    continue
+                if not isinstance(m.get("id"), str):
+                    issues.append(f"categories[{cat_key}].milestones[{i}].id: must be a string")
+                if not isinstance(m.get("title"), str):
+                    issues.append(f"categories[{cat_key}].milestones[{i}].title: must be a string")
+                if not isinstance(m.get("category"), str):
+                    issues.append(
+                        f"categories[{cat_key}].milestones[{i}].category: must be a string"
+                    )
+                if not isinstance(m.get("subcategory"), str):
+                    issues.append(
+                        f"categories[{cat_key}].milestones[{i}].subcategory: must be a string"
+                    )
+                if not _valid_event_date(m.get("date")):
+                    issues.append(
+                        f"categories[{cat_key}].milestones[{i}].date: must be a parseable date string"
+                    )
+                geo = m.get("geolocation")
+                # Absent means unlocated, which is valid and which the map renders
+                # as "no dot". (0, 0) is NOT the way to spell unlocated: it is the
+                # upstream sentinel, and storing it put a dot in the Gulf of Guinea.
+                # check_events has always enforced this; milestones did not.
+                if geo is not None and lc.is_unlocated(geo):
+                    issues.append(
+                        f"categories[{cat_key}].milestones[{i}].geolocation: " + _why_unlocated(geo)
+                    )
+                if not _valid_source_url(m.get("url")):
+                    issues.append(
+                        f"categories[{cat_key}].milestones[{i}].url: must be absent or an http(s) URL, got {m.get('url')!r}"
+                    )
+                for flag in ("is_record", "is_breakthrough", "is_new"):
+                    if flag in m and not isinstance(m[flag], bool):
+                        issues.append(
+                            f"categories[{cat_key}].milestones[{i}].{flag}: must be a boolean if present"
+                        )
+                # Written by unify_duplicate_milestones() when one reported result
+                # arrived from several sources. It must be a non-empty list of
+                # non-empty strings, and it only appears on a merged record, so it
+                # is validated rather than ignored.
+                if "sources" in m:
+                    srcs = m["sources"]
+                    if not isinstance(srcs, list) or not srcs:
+                        issues.append(
+                            f"categories[{cat_key}].milestones[{i}].sources: must be a non-empty list when present"
+                        )
+                    elif any(not isinstance(s, str) or not s.strip() for s in srcs):
+                        issues.append(
+                            f"categories[{cat_key}].milestones[{i}].sources: entries must be non-empty strings"
+                        )
+                    elif len(set(srcs)) != len(srcs):
+                        issues.append(
+                            f"categories[{cat_key}].milestones[{i}].sources: contains duplicate source names"
+                        )
+            # Per-category newest-first, for the same reason as events.json: the
+            # dashboard and the catalog render each bucket in list order.
+            dates = [
+                m.get("date")
+                for m in milestones
+                if isinstance(m, dict) and isinstance(m.get("date"), str)
+            ]
+            for i in range(1, len(dates)):
+                if dates[i] > dates[i - 1]:
+                    issues.append(
+                        f"categories[{cat_key}].milestones: not newest-first at position {i} "
+                        f"({dates[i]} after {dates[i - 1]})"
+                    )
+                    break
+    return issues
+
+
+def check_human_rights(items: object) -> list[str]:
+    """Validate the Human Rights Violations layer.
+
+    A toggleable operational layer, not a milestone category: it is absent from
+    controls.events.categories, never appears in a category filter, and defaults
+    to OFF on the map. Entries render as landmarks with milestone tooltips, so they
+    are held to the same located-pair and lifecycle rules as the other layers.
+    """
+    issues: list[str] = []
+    if items is None:
+        # Optional until the first fetch writes the key.
+        return issues
+    if not isinstance(items, list):
+        return ["human_rights_violations must be a list"]
+    for i, item in enumerate(items):
+        if not isinstance(item, dict):
+            issues.append(f"human_rights_violations[{i}]: entry must be an object")
+            continue
+        if not isinstance(item.get("id"), str) or not item["id"].strip():
+            issues.append(f"human_rights_violations[{i}].id: must be a non-empty string")
+        if not isinstance(item.get("name"), str) or not item["name"].strip():
+            issues.append(f"human_rights_violations[{i}].name: must be a non-empty string")
+        if not _coord_located(item.get("lat"), item.get("lon")):
+            issues.append(
+                f"human_rights_violations[{i}]: must carry a located lat/lon pair "
+                f"(not null island), got ({item.get('lat')!r}, {item.get('lon')!r})"
+            )
+        issues.extend(_check_lifecycle("human_rights_violations", i, item))
+        if not _valid_source_url(item.get("url")):
+            issues.append(
+                f"human_rights_violations[{i}].url: must be absent or an http(s) URL, "
+                f"got {item.get('url')!r}"
+            )
+    issues.extend(_check_unique_ids("human_rights_violations", items))
+    return issues
+
+
+# Policy-change kinds accepted by the alliance_dots sublayer. Mirrors
+# ALLIANCE_DOT_HEADINGS in assets/js/worldmap.js: the heading is looked up by
+# kind, so an unlisted value would silently fall back to the generic label and
+# two different facts would read identically. test_check_data.py asserts the two
+# tables hold the same keys.
+ALLIANCE_DOT_KINDS = frozenset(
+    {
+        "accession",
+        "posture",
+        "mandate",
+        "industrial",
+        "capability",
+    }
+)
+
+
+def check_alliance_dots(items: object) -> list[str]:
+    """Validate the Alliance & Defence Policy dot sublayer.
+
+    A dot sublayer of the Ground & Fleet Deployments datalayer: alliance
+    accessions, posture changes, mandates and defence-industrial decisions. It is
+    deliberately NOT a Military & Defense milestone category - those carry
+    technical records (drone range, rocket performance, OSINT), whereas this
+    carries the political decision itself - so it lives in world_layers.json and
+    gets a layer switch rather than a legend colour.
+
+    Held to the same located-pair and lifecycle rules as the other layers. The
+    `kind` is additionally constrained, because it selects the tooltip heading
+    client-side and an unknown value would silently render as "Defence Posture".
+    """
+    issues: list[str] = []
+    if items is None:
+        # Optional until the first curation writes the key.
+        return issues
+    if not isinstance(items, list):
+        return ["alliance_dots must be a list"]
+    for i, item in enumerate(items):
+        if not isinstance(item, dict):
+            issues.append(f"alliance_dots[{i}]: entry must be an object")
+            continue
+        if not isinstance(item.get("id"), str) or not item["id"].strip():
+            issues.append(f"alliance_dots[{i}].id: must be a non-empty string")
+        if not isinstance(item.get("name"), str) or not item["name"].strip():
+            issues.append(f"alliance_dots[{i}].name: must be a non-empty string")
+        if not _coord_located(item.get("lat"), item.get("lon")):
+            issues.append(
+                f"alliance_dots[{i}]: must carry a located lat/lon pair "
+                f"(not null island), got ({item.get('lat')!r}, {item.get('lon')!r})"
+            )
+        kind = item.get("kind", "posture")
+        if kind not in ALLIANCE_DOT_KINDS:
+            issues.append(
+                f"alliance_dots[{i}].kind: unknown kind {kind!r}; expected one of "
+                f"{sorted(ALLIANCE_DOT_KINDS)}"
+            )
+        issues.extend(_check_lifecycle("alliance_dots", i, item))
+        if not _valid_source_url(item.get("url")):
+            issues.append(
+                f"alliance_dots[{i}].url: must be absent or an http(s) URL, got {item.get('url')!r}"
+            )
+    issues.extend(_check_unique_ids("alliance_dots", items))
+    return issues
+
+
+def check_data(data: dict, filename: str) -> list[str]:
+    if not isinstance(data, dict):
+        return ["top-level JSON must be an object"]
+    if filename == "events.json":
+        return check_events(data.get("events"))
+    if filename == "world_layers.json":
+        # Accept both "deployments" (new) and "fleet_movements" (legacy)
+        deployments = data.get("deployments")
+        kind = "deployments"
+        if deployments is None:
+            deployments = data.get("fleet_movements")
+            kind = "fleet_movements"
+        return (
+            _check_header(data)
+            + check_zones(data.get("conflict_zones"))
+            + _check_zone_tier_radius(data.get("conflict_zones") or [], "conflict_zones")
+            + check_crisis_zones(data.get("crisis_zones"))
+            + check_fleets(deployments, kind=kind)
+            + check_human_rights(data.get("human_rights_violations"))
+            + check_alliance_dots(data.get("alliance_dots"))
+        )
+    if filename == "milestones.json":
+        return check_milestones(data)
+    return [f"unsupported data file: {filename}"]
+
+
+def _check_header(data: dict) -> list[str]:
+    """Top-level contract for world_layers.json: the schema version in force and
+    a parseable UTC last_update timestamp (both writers always set these)."""
+    issues: list[str] = []
+
+    version = data.get("version")
+    if not isinstance(version, str) or re.fullmatch(r"\d+\.\d+\.\d+", version) is None:
+        issues.append(f"version must be a semver string, got {version!r}")
+    elif version != _FILE_VERSION:
+        issues.append(f"version {version!r} does not match the schema's expected {_FILE_VERSION!r}")
+
+    last_update = data.get("last_update")
+    if not isinstance(last_update, str) or not last_update:
+        issues.append("last_update must be a non-empty UTC timestamp string")
+        return issues
+    try:
+        ts = _datetime.fromisoformat(last_update.replace("Z", "+00:00"))
+    except ValueError:
+        issues.append(f"last_update {last_update!r} is not parseable as an ISO-8601 timestamp")
+    else:
+        if ts.tzinfo is None or ts.tzinfo.utcoffset(ts) is None:
+            issues.append("last_update must carry a UTC offset (e.g. +00:00 or Z)")
+    return issues
+
+
+def check_archive(data, filename: str) -> list[str]:
+    """Validate a flat archive record list (milestones_history.json).
+
+    Same contract as check_milestones, minus the category envelope: this file is a
+    list, one flat record per milestone, and it is what the year slider's historical
+    range is drawn from. It had no validator at all - 106 published records that
+    nothing checked. Present-but-wrong is an error; an absent geolocation is not,
+    matching the live milestones file.
+    """
+    if not isinstance(data, list):
+        return [f"{filename}: must be a JSON array of records"]
+    issues: list[str] = []
+    seen_ids: set[str] = set()
+    for i, rec in enumerate(data):
+        if not isinstance(rec, dict):
+            issues.append(f"{filename}[{i}]: must be an object")
+            continue
+        if not isinstance(rec.get("id"), str) or not rec["id"].strip():
+            issues.append(f"{filename}[{i}].id: must be a non-empty string")
+        elif rec["id"] in seen_ids:
+            issues.append(f"{filename}[{i}].id: duplicate id {rec['id']!r}")
+        else:
+            seen_ids.add(rec["id"])
+        for field in ("title", "category", "subcategory", "date", "source", "url"):
+            if not isinstance(rec.get(field), str) or not rec[field].strip():
+                issues.append(f"{filename}[{i}].{field}: must be a non-empty string")
+        if not _valid_event_date(rec.get("date")):
+            issues.append(f"{filename}[{i}].date: must be a parseable date string")
+        if not _valid_source_url(rec.get("url")):
+            issues.append(f"{filename}[{i}].url: must be absolute http(s)")
+        if rec.get("category") not in _CATEGORIES:
+            issues.append(
+                f"{filename}[{i}].category: {rec.get('category')!r} is not a canonical category"
+            )
+        geo = rec.get("geolocation")
+        if geo is not None and lc.is_unlocated(geo):
+            issues.append(f"{filename}[{i}].geolocation: " + _why_unlocated(geo))
+    return issues
+
+
+def check_activity(data, filename: str) -> list[str]:
+    """Validate the activity time series the dashboard's chart is built from.
+
+    dashboard.js does `series.map(d => d.count)` and, for the year filter,
+    `series.filter(d => d.date.startsWith(year))`. Both assume well-formed entries,
+    so a missing `date` is a TypeError inside the chart rather than a bad-looking
+    bar. The cross-checks at the end are the ones that catch real drift: `total` that
+    no longer matches the sum means the header count and the bars disagree, and that
+    is invisible without arithmetic.
+    """
+    if not isinstance(data, dict):
+        return [f"{filename}: must be an object"]
+    issues: list[str] = []
+    if data.get("bucket") not in ("day", "week", "month", "year"):
+        issues.append(f"{filename}.bucket: must be day|week|month|year, got {data.get('bucket')!r}")
+    days = data.get("days")
+    if not isinstance(days, list) or not days:
+        issues.append(f"{filename}.days: must be a non-empty list")
+        return issues
+
+    seen: set[str] = set()
+    previous = None
+    for i, entry in enumerate(days):
+        if not isinstance(entry, dict):
+            issues.append(f"{filename}.days[{i}]: must be an object")
+            continue
+        d = entry.get("date")
+        if not isinstance(d, str) or not _valid_event_date(d):
+            issues.append(f"{filename}.days[{i}].date: must be a YYYY-MM-DD string")
+            continue
+        count = entry.get("count")
+        if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+            issues.append(f"{filename}.days[{i}].count: must be a non-negative integer")
+        if d in seen:
+            issues.append(f"{filename}.days[{i}].date: duplicate {d!r}")
+        seen.add(d)
+        # dashboard.js labels the last bar as the most recent, so ordering is load
+        # bearing rather than cosmetic.
+        if previous is not None and d <= previous:
+            issues.append(f"{filename}.days[{i}].date: out of order ({d!r} after {previous!r})")
+        previous = d
+
+    for i, spike in enumerate(data.get("spikes") or []):
+        if not isinstance(spike, dict):
+            issues.append(f"{filename}.spikes[{i}]: must be an object")
+            continue
+        if not _valid_event_date(spike.get("date")):
+            issues.append(f"{filename}.spikes[{i}].date: must be a YYYY-MM-DD string")
+        if not isinstance(spike.get("count"), (int, float)) or isinstance(spike.get("count"), bool):
+            issues.append(f"{filename}.spikes[{i}].count: must be a number")
+        if not isinstance(spike.get("reason"), str) or not spike["reason"].strip():
+            issues.append(f"{filename}.spikes[{i}].reason: must be a non-empty string")
+
+    total = data.get("total")
+    if isinstance(total, int) and not isinstance(total, bool):
+        summed = sum(
+            e["count"]
+            for e in days
+            if isinstance(e, dict)
+            and isinstance(e.get("count"), int)
+            and not isinstance(e.get("count"), bool)
+        )
+        if total != summed:
+            issues.append(
+                f"{filename}.total: {total} does not match the sum of "
+                f"days ({summed}); the header count and the bars disagree"
+            )
+    if seen:
+        for field, expected in (("first", min(seen)), ("last", max(seen))):
+            if data.get(field) != expected:
+                issues.append(
+                    f"{filename}.{field}: {data.get(field)!r} does not match "
+                    f"the series bounds ({expected!r})"
+                )
+    return issues
+
+
+def check_catalog(data, filename: str) -> list[str]:
+    """Validate the curated historical catalog the backfill ingests from.
+
+    Delegates to the ingest script's own entry validator rather than restating it,
+    so the two cannot disagree about what a catalog entry looks like.
+    """
+    import scrape_historical_milestones as sh
+
+    milestones = data.get("milestones") if isinstance(data, dict) else None
+    if not isinstance(milestones, list) or not milestones:
+        return [f"{filename}.milestones: must be a non-empty list"]
+    issues: list[str] = []
+    for i, entry in enumerate(milestones):
+        for problem in sh.validate_catalog_entry(entry, i):
+            issues.append(f"{filename}: {problem}")
+    if not isinstance(data.get("version"), str):
+        issues.append(f"{filename}.version: must be a string")
+    return issues
+
+
+def check_file(path: Path) -> list[str]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return [f"unreadable/unparseable JSON: {exc}"]
+    if path.name in ARCHIVE_FILES:
+        return check_archive(data, path.name)
+    if path.name in ACTIVITY_FILES:
+        return check_activity(data, path.name)
+    if path.name in CATALOG_FILES:
+        return check_catalog(data, path.name)
+    return check_data(data, path.name)
+
+
+def main(argv: list[str]) -> int:
+    roots = [Path(a) for a in argv] or [DATA_DIR]
+    targets: list[Path] = []
+    for root in roots:
+        if root.is_dir():
+            targets.extend(root / f for f in REQUIRED_FILES)
+            targets.extend(root / f for f in ARCHIVE_FILES)
+            targets.extend(root / f for f in ACTIVITY_FILES)
+            targets.extend(root / f for f in CATALOG_FILES)
+        else:
+            targets.append(root)
+
+    problems = 0
+    for path in targets:
+        if not path.exists():
+            print(f"[error] {path}: file missing")
+            problems += 1
+            continue
+        issues = check_file(path)
+        if issues:
+            for issue in issues:
+                print(f"[error] {path}: {issue}")
+            problems += len(issues)
+        else:
+            print(f"[ok] {path}")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

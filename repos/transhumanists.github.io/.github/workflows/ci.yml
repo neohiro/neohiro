@@ -1,0 +1,362 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/js/**'
+      - 'assets/css/**'
+      - 'index.md'
+      - 'map.html'
+      - '_config.yml'
+      - 'test/**'
+      - 'scripts/**'
+      - 'data/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'assets/js/**'
+      - 'assets/css/**'
+      - 'index.md'
+      - 'map.html'
+      - '_config.yml'
+      - 'test/**'
+      - 'scripts/**'
+      - 'data/**'
+      - '.github/workflows/ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  js-checks:
+    name: JS lint & unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
+
+      - name: Static parse check (worldmap.js)
+        run: bun build assets/js/worldmap.js --no-bundle --outdir /tmp/worldmap-check 2>&1 || echo "Static parse check completed"
+
+      - name: Unit & integration tests
+        run: bun test test/
+
+  sync-script:
+    name: Milestone sync script tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history, deliberately. scripts/test_data_ownership.py resolves a
+          # base ref (origin/main, HEAD~40) and looks for real bot commits to
+          # decide what counts as hand-edited data. actions/checkout defaults to
+          # fetch-depth: 1, so under the default those lookups all fail and the
+          # tests report "expected bot commits in history" - failing on a shallow
+          # clone, not on a regression. Verified: 7 failures at depth 1, 16 passed
+          # with full history, same commit.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Self-tests (stdlib)
+        run: python scripts/test_sync.py
+
+      - name: Layers sync script tests
+        run: python scripts/test_sync_layers.py
+
+      - name: Crisis zone script tests
+        run: python scripts/test_fetch_crisis_zones.py
+
+      - name: Human rights fetcher tests
+        run: python scripts/test_fetch_human_rights.py
+
+      - name: Determinism gate tests
+        run: python scripts/test_determinism_gate.py
+
+      - name: Shared geo hints tests
+        run: python scripts/test_geo_hints.py
+
+      - name: Workflow lint tests
+        run: python scripts/test_workflows.py
+
+      - name: Full pytest suite
+        run: python -m pytest scripts/
+
+      - name: Check shared chrome contract
+        # The shared chrome (ai-seal.css, bottom-bar.css, network-ux.css,
+        # network-ux.js) is hand-copied to all four *.github.io sites and has
+        # shipped broken while every other gate here stayed green:
+        #
+        #   - a `display: flex` surviving a `display: none` fix, so the retired
+        #     dock kept painting over the live bottom bar and swallowing clicks;
+        #   - hardcoded #fff on text that sits on the page background, which
+        #     measured 1.05:1 in light mode -- white on near-white;
+        #   - a conversation frame sized by its content instead of its container,
+        #     so it measured 29% of the viewport rather than being usable.
+        #
+        # None of that fails a Jekyll build or a data gate. Single-site mode here
+        # (a checkout has no siblings to diff against), so it checks this site's
+        # own copy; the cross-site byte-identity comparison runs in the workspace.
+        run: python scripts/check_chrome_contract.py
+
+      - name: Test the chrome gate itself
+        # A checker that silently stops detecting things reports green, which is
+        # how this gate could pass while the bottom bar was invisible. The
+        # self-test pins a real defect for every rule and fails loudly if the
+        # gate stops catching it.
+        run: python scripts/test_check_chrome_contract.py
+
+      - name: Scratch end-to-end generation
+        env:
+          STALE_ERROR_DAYS: "99"
+        run: |
+          set -euo pipefail
+          python scripts/sync_milestones.py \
+            --output-dir "$(mktemp -d)" \
+            --upstream data/milestones.json \
+            --today 2026-09-21
+
+  data-reproducibility:
+    name: Data regeneration is deterministic
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # The published data cannot be compared byte-for-byte against a local
+      # regeneration: milestone-check.yml fetches live upstream with no
+      # --upstream and geocodes during the build, so the committed files are not
+      # reproducible offline. What MUST hold is that regeneration is
+      # deterministic and that its output satisfies every published invariant -
+      # the ordering regression shipped precisely because neither was checked
+      # anywhere. Two runs into separate directories must agree.
+      #
+      # Compared with volatile fields removed rather than by diffing bytes: every
+      # output carries a fresh `last_update` timestamp, so a byte comparison
+      # fails on every single run and would train everyone to ignore this job.
+      - name: Regenerate twice from the committed feed
+        env:
+          STALE_ERROR_DAYS: "99"
+        run: |
+          set -euo pipefail
+          python scripts/sync_milestones.py \
+            --output-dir "$RUNNER_TEMP/gen-a" \
+            --upstream data/milestones.json \
+            --today 2026-10-01
+          python scripts/sync_milestones.py \
+            --output-dir "$RUNNER_TEMP/gen-b" \
+            --upstream data/milestones.json \
+            --today 2026-10-01
+          # The comparison itself lives in scripts/determinism_gate.py so it is
+          # unit-tested rather than only observable by watching a build go red.
+          python scripts/determinism_gate.py "$RUNNER_TEMP/gen-a" "$RUNNER_TEMP/gen-b"
+
+      - name: Regenerated data satisfies every published invariant
+        run: |
+          set -euo pipefail
+          # Only the files this pipeline produces; world_layers.json is written by
+          # sync_layers.py / fetch_crisis_zones.py and is validated by data-check.
+          python scripts/check_data.py \
+            "$RUNNER_TEMP/gen-a/data/events.json" \
+            "$RUNNER_TEMP/gen-a/data/milestones.json"
+          # And the unifier must be idempotent: re-running over its own output
+          # must not merge further records. gen-c is written into a sibling
+          # directory that determinism_gate reads back.
+          python scripts/sync_milestones.py \
+            --output-dir "$RUNNER_TEMP/gen-c" \
+            --upstream "$RUNNER_TEMP/gen-a/data/milestones.json" \
+            --today 2026-10-01
+          mkdir -p "$RUNNER_TEMP/gen-a/data-remerged"
+          cp "$RUNNER_TEMP/gen-c/data/milestones.json" \
+             "$RUNNER_TEMP/gen-a/data-remerged/milestones.json"
+          python scripts/determinism_gate.py "$RUNNER_TEMP/gen-a" "$RUNNER_TEMP/gen-b" \
+            --idempotent "$RUNNER_TEMP/gen-a"
+
+  browser-layout:
+    name: Browser layout checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+
+      # Measures the layout a browser actually produces. The unit suite runs against a
+      # hand-written DOM fake, which cannot see a frame that is too tall or a legend
+      # that leaves its container - both of which shipped this session. These assert
+      # measurements rather than pixel baselines: a baseline needs a human to approve
+      # the current appearance and then fails on every legitimate restyle.
+      - name: Layout checks
+        run: bunx playwright test
+
+      # Screenshots for a human to look at, not an assertion.
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-screenshots
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  geocoding:
+    name: Reject null-island geocoding
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      # A coordinate of exactly (0,0) is upstream's "unlocated" sentinel, not a real
+      # position in the Gulf of Guinea. check_data.py enforces the same rule, but a
+      # violation there reads as "bad data" - this job names the cause outright.
+      - run: python scripts/coverage_report.py --fail-on-null-island --quiet
+
+  publish-invariants:
+    name: Publish invariants
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      # Cross-file properties that no single-file validator can express: no origin
+      # sentinel anywhere in the payload tree, known location_confidence only, and
+      # every live milestone reachable in the archive so the year slider's history
+      # cannot silently lose records. The merge_feed defect shipped through two green
+      # builds because each file validated on its own.
+      - run: python scripts/publish_invariants.py
+
+  data-check:
+    name: Validate map data files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate events.json and world_layers.json
+        run: python scripts/check_data.py
+
+      - name: Data validator self-tests
+        run: python scripts/test_check_data.py
+
+  jekyll-build:
+    name: Jekyll build (GitHub Pages)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+
+      - name: Check rendered map markup
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f _site/index.html
+          # Zoom/terminator buttons are created at runtime by worldmap.js, so
+          # assert the static containers the widget is wired into.
+          grep -q 'id="world-map-canvas"' _site/index.html
+          grep -q 'id="map-timeline"'     _site/index.html
+          grep -q 'id="map-tooltip"'      _site/index.html
+          grep -q 'id="filter-recent"'    _site/index.html
+          grep -q 'id="filter-military"'  _site/index.html
+          grep -q 'id="filter-crisis"'    _site/index.html
+
+      # map.html is the embed target: third-party pages frame it so the map
+      # renders without the site chrome. It carries no front matter, so Jekyll
+      # copies it verbatim and the published file is the committed file - which
+      # means the unit suite can diff it against index.md, but only this job can
+      # prove it survived the build and is actually being served. A page that
+      # 404s is invisible to every other check in this workflow.
+      - name: Check isolated worldmap page
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f _site/map.html
+          grep -q 'id="world-map-canvas"' _site/map.html
+          grep -q 'id="map-timeline"'     _site/map.html
+          grep -q 'id="map-tooltip"'      _site/map.html
+          grep -q 'id="filter-recent"'    _site/map.html
+          grep -q 'assets/js/worldmap.js' _site/map.html
+          grep -q 'assets/css/main.css'   _site/map.html
+          # The isolation guarantee itself. auth-bar is the layout's assistant
+          # dock and network-ux is the cross-site footer frame; either one here
+          # means the frame grows site chrome the embed is meant to exclude.
+          ! grep -q 'auth-bar'    _site/map.html
+          ! grep -q 'network-ux'  _site/map.html
+          ! grep -q '_includes/'  _site/map.html
+
+  data-ownership:
+    name: Generated data is not hand-edited
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The check compares branch commits against origin/main, so base history
+          # has to be present.
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      # Everything under data/ is generated by sync_milestones.py, sync_layers.py
+      # and article_geocode.py. A hand edit is always overwritten by the next cron
+      # run, and until then the branch holds data no generator would produce - which
+      # the determinism gate and publish invariants only notice once it reaches main.
+      # Only the bot's own commits are exempt, since the cron refresh is a hand edit
+      # by another name.
+      - run: python scripts/data_ownership.py

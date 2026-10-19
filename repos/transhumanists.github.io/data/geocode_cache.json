@@ -1,0 +1,83 @@
+{
+  "description": "Derived article-body geocoding outcomes. Stores the resolved coordinate and the evidence for it - never the fetched page text. Written only by scripts/article_geocode.py --refresh.",
+  "version": "1.0.0",
+  "articles": {
+    "https://www.quantamagazine.org/gravity-seems-holographic-what-does-that-mean-for-reality-20260925/": {
+      "fetched": "0234176f694583db",
+      "outcome": {
+        "located": false,
+        "reason": "uncorroborated: inst:columbia (5.0), no rival and no second route"
+      }
+    },
+    "https://arxiv.org/abs/2609.28876": {
+      "fetched": "8951901b6117e7a6",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "https://arxiv.org/abs/2609.25166": {
+      "fetched": "a8d0a54e2a68bd1f",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "https://www.nature.com/articles/s41587-026-03322-x": {
+      "fetched": "213d72821691af7d",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "http://arxiv.org/abs/2607.00266v1": {
+      "fetched": "b26e77aca7859238",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "http://arxiv.org/abs/2607.00269v3": {
+      "fetched": "d52e95cbea6e47e3",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "http://arxiv.org/abs/2607.00185v1": {
+      "fetched": "3c6312294f82d772",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "http://arxiv.org/abs/2608.20391v1": {
+      "fetched": "50793d58e419aca5",
+      "outcome": {
+        "located": false,
+        "reason": "uncorroborated: place:uscis (3.0), no rival and no second route"
+      }
+    },
+    "http://arxiv.org/abs/2608.20392v1": {
+      "fetched": "b568e9693058be05",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "http://arxiv.org/abs/2607.00218v1": {
+      "fetched": "b15ab18c70afbb37",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    },
+    "http://arxiv.org/abs/2607.00272v1": {
+      "fetched": "cb60c86fcfe3e59e",
+      "outcome": {
+        "located": false,
+        "reason": "no place, institution or demonym found"
+      }
+    }
+  }
+}

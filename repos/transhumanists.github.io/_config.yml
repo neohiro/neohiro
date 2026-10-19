@@ -1,0 +1,81 @@
+title: transhumanists
+description: "Human Progress Dashboard — tracking breakthroughs in biotech, AGI, quantum, energy, cyber, space & defense"
+url: "https://transhumanists.github.io"
+baseurl: ""
+github_username: transhumanists
+github_repo: transhumanists.github.io
+
+# Chrome identity for the shared chrome includes (_includes/bottom-bar.html).
+# See the note in frenzypenguin-media.github.io/_config.yml: `github_username`
+# is shared with FPM and cannot identify a site. One of:
+# fpm | neohiro | osi | transhumanists
+shell: transhumanists
+
+theme: null
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .github
+  - README.md
+  - LICENSE
+  - scripts
+  - test
+  - "*.ps1"
+  - "*.sh"
+  - scrapers/
+  - llm/
+  - self_healer/
+  - social/
+  - github/
+  - webhooks/
+  - requirements.txt
+
+
+# >>> top-bar contract (managed by template-shared/site_forge.py)
+# Top-bar contract. Rendered by _includes/nav.html — ONE template serves
+# every site in the network; only these lists differ. Format is
+# "Label|url" with an optional trailing drop-priority (2|3|4). Labels MUST
+# stay one word: the bar is not sticky, so a long label is the only thing
+# that can force a wrap on a phone. Only link pages that actually exist.
+github_username: "transhumanists"
+sponsor_username: "transhumanists"
+dashboard_url: "https://github.com/neohiro/dashboard"
+
+nav_links:
+  - "Home|/"
+  - "Summary|/summary|2"
+  - "Live|/live.html|3"
+
+community_links:
+  - "Org Overview|https://github.com/transhumanists"
+  - "Milestones|https://github.com/transhumanists/milestones"
+  - "APIs|https://github.com/transhumanists/apis"
+  - "neohiro|https://neohiro.github.io/"
+  - "Sponsor|https://github.com/sponsors/transhumanists"
+
+# Bottom-bar and assistant contract. request_access is the public gate for
+# the private assistant; an empty string means the site has no access page
+# yet and the dock must not link one.
+assistant:
+  request_access: ""
+  dashboard_url: "https://github.com/neohiro/dashboard"
+
+palette: "purple-matrix"
+fonts: "matrix"
+decor: "aurora"
+decor_class: "decor-aurora decor-grain"
+font_google: "JetBrains+Mono:wght@400;500;700|Space+Grotesk:wght@400;500;600;700"
+# <<< top-bar contract

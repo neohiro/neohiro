@@ -1,0 +1,8 @@
+# pack-refs with: peeled fully-peeled sorted 
+042d2fa2042b40bc5902c6dfa9679ebff2898e43 refs/remotes/origin/add-ecosystem-network-1502829882
+a1c406ff8c30b18135756ffe906b0b5fb93b1d21 refs/remotes/origin/add-ecosystem-network-910467488
+a196e024685980b229ef76156eeea0bc35468cb2 refs/remotes/origin/chore/contract-sync
+0c4761b2eb51943dc5d6cc93dc692c5744c8f226 refs/remotes/origin/data-ownership
+c6c6fa6d7a510bf014594ab20296f1f3fdfc36a3 refs/remotes/origin/feat/legend-silver-shimmer
+244e57d1e21d88ec140f22abca3e4d1ee2a6e971 refs/remotes/origin/fix-false-positive-map-html-test
+635cdec3aa5be95ccf36a0c6d8f7fd5fe2b6f203 refs/remotes/origin/main

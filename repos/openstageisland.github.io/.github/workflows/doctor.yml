@@ -1,0 +1,39 @@
+# There is deliberately no doctor job in this file.
+#
+# This repository is PUBLIC and openstageisland/doctor is PRIVATE. A public
+# repository cannot reach a private reusable workflow by either available route:
+#
+#   1. calling it - GitHub refuses with "error parsing called workflow",
+#      reported as a failed run with ZERO jobs and no logs. That is what made
+#      this file look broken for 116 consecutive runs.
+#   2. checking it out with GITHUB_TOKEN - the token is scoped to this
+#      repository, so actions/checkout fails with a 403.
+#
+# Both were tried and both are reproduced in PR #21's history.
+#
+# Nothing is lost. openstageisland/doctor scans every repository in this account
+# from its own scheduled run, which is private-to-private and works. That is the
+# mechanism that fixes CI errors unattended.
+#
+# To get per-PR feedback here, openstageisland/doctor must be PUBLIC. That is a
+# deliberate visibility decision about a repo containing CI tooling and
+# fixtures, not a configuration change, so it is left to the account owner.
+on:
+  schedule:
+    - cron: '42 5,14,22 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  account-doctor-is-scheduled-elsewhere:
+    # Placeholder so this file is not empty. The account doctor runs on its own
+    # schedule and covers this repository; see openstageisland/doctor.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain
+        run: |
+          echo "This repository is public; its doctor is private and cannot be called from here."
+          echo "Coverage comes from openstageisland/doctor's own scheduled account scan."
+          echo "Reports: https://github.com/openstageisland/doctor/actions"

@@ -1,0 +1,195 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate source files exist
+        run: |
+          set -euo pipefail
+          required=(index.md _config.yml Gemfile assets/style.css data.json README.md)
+          for f in "${required[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::Missing required source file"
+              exit 1
+            fi
+            echo "✓ $f exists"
+          done
+
+      - name: Validate front matter in Markdown source
+        run: |
+          set -euo pipefail
+          failures=0
+          for f in *.md destinations.md README.md; do
+            [ -f "$f" ] || continue
+            if ! grep -q "^---$" "$f"; then
+              echo "::error file=$f::Missing Jekyll front matter"
+              failures=$((failures+1))
+            else
+              echo "✓ $f front matter present"
+            fi
+          done
+          [ "$failures" -eq 0 ] || { echo "$failures file(s) missing front matter"; exit 1; }
+
+      - name: Validate JSON
+        run: |
+          set -euo pipefail
+          for f in data.json; do
+            [ -f "$f" ] || continue
+            python3 -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8')); print('valid: ' + sys.argv[1])" "$f"
+          done
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Unit tests (section-nav scroll animation)
+        # Glob rather than a bare `tests/` directory: directory arguments to
+        # `node --test` are not portable across Node 20-24.
+        run: node --test tests/*.test.js
+
+      - name: Unit tests (CI gate scripts)
+        # The gates below can only be exercised against a real build, so their
+        # own logic is tested here against synthetic fixtures.
+        run: |
+          python3 .github/scripts/test_check_publish_artifacts.py
+          python3 .github/scripts/test_check_rendered_html.py
+          python3 .github/scripts/test_check_local_references.py
+          python3 .github/scripts/test_check_config.py
+          python3 .github/scripts/test_check_css_tokens.py
+          node --test .github/scripts/test_check_workflows.test.js
+          node --test .github/scripts/test_check_workflows_expressions.test.js
+
+      - name: Validate workflow definitions
+        # A workflow whose YAML does not parse cannot be loaded by GitHub at
+        # all: the run is reported as failed with zero jobs and no logs, which
+        # is indistinguishable from infrastructure flakiness in review. ci.yml
+        # and heartbeat.yml were both unloadable here for their whole life.
+        # Runs first so a malformed workflow is reported before anything else.
+        # --no-network keeps it deterministic and credential-free; cross-repo
+        # reusable-workflow resolution needs `gh` and is run manually.
+        run: python3 .github/scripts/check_workflows.py --no-network
+
+      - name: Validate design-token bridge
+        # network-ux.css and auth-bar.css are synced to all four *.github.io
+        # sites and read a neutral vocabulary (--fg, --bg-card, --border,
+        # --accent). This site defines --color-*. Every shared read carries a
+        # hard-coded fallback, so a missing token is silent and the assistant
+        # dock, the screenwide conversation sheet and the network widgets render
+        # in the fallback palette instead of the site's. site-chrome.css bridges
+        # the two; this asserts the bridge still covers the shared CSS.
+        run: python3 .github/scripts/check_css_tokens.py --site .
+
+      - name: Check shared chrome contract
+        # The shared chrome (ai-seal.css, bottom-bar.css, network-ux.css) is
+        # hand-copied to all four *.github.io sites and has shipped broken while
+        # every other gate stayed green: a `display: flex` surviving a
+        # `display: none` fix so the retired dock kept painting and stealing
+        # clicks, hardcoded #fff on text that sits on the page background
+        # (1.05:1 in light mode), and a conversation frame sized by its content
+        # rather than its container. None of that fails a Jekyll build.
+        #
+        # Single-site mode (a checkout has no siblings to diff against), so it
+        # checks this site's own copy of each shared file; the cross-site
+        # byte-identity comparison runs in the workspace.
+        run: python3 scripts/check_chrome_contract.py
+
+      - name: Test the chrome gate itself
+        # A checker that silently stops detecting things reports green, which is
+        # how this gate could pass while the bottom bar was invisible. The
+        # self-test pins a real defect for every rule and fails loudly if the
+        # gate stops catching it.
+        run: python3 scripts/test_check_chrome_contract.py
+
+      - name: Validate _config.yml
+        # Was an inline `python3 -c "..."` block whose Python sat at column 0
+        # inside this `run: |` scalar. That terminated the block and made the
+        # whole workflow file invalid YAML, so ci.yml never ran at all.
+        run: python3 .github/scripts/check_config.py --config _config.yml
+
+      - name: Set up Ruby and Jekyll
+        # Replaces a hand-rolled `gem install bundler`, which fails on
+        # ubuntu-24.04 with Gem::FilePermissionError: the runner's system gem
+        # directory (/var/lib/gems/3.2.0) is not writable, so setup never
+        # completed and the build step was skipped. setup-ruby provisions a
+        # user-writable Ruby and `bundler-cache` runs bundle install for us.
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Build site
+        run: bundle exec jekyll build --trace 2>&1
+
+      - name: Validate generated HTML
+        # Replaces an inline grep pipeline. The same basics are still checked
+        # (doctype, lang, title, description, balanced <section>) and are now
+        # joined by rules that need real rendered output: unrendered Liquid,
+        # duplicate ids, dangling #anchors, and heading structure.
+        run: python3 .github/scripts/check_rendered_html.py --site _site
+
+      - name: Validate published artifacts
+        # _config.yml's exclude: list is the only thing keeping working files
+        # out of the public site, and it fails silently. This asserts the
+        # exclusion actually took effect.
+        run: python3 .github/scripts/check_publish_artifacts.py --site _site --config _config.yml
+
+      - name: Validate local asset references
+        # Replaces a shell pipeline that skipped every reference starting with
+        # "/". Because `relative_url` emits root-absolute paths when baseurl is
+        # empty, it inspected zero references on this site while reporting
+        # success, and missed three live 404s. Missing assets fail; missing
+        # page links warn, because the network's shared partials link to pages
+        # (/privacy/, /tos/, /dashboard/) that only the hub site serves.
+        run: python3 .github/scripts/check_local_references.py --site _site --config _config.yml
+
+  deploy:
+    runs-on: ubuntu-24.04
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby and Jekyll
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Build site
+        run: bundle exec jekyll build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

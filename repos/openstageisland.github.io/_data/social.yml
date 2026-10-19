@@ -1,0 +1,16 @@
+# social.yml — "find us on" data for _includes/social-links.html.
+#
+# This file is the reason every footer Bluesky link on this site was silently
+# absent: social-links.html reads site.data.social.<key>, and no social.yml
+# existed in any of the four sites. With it present the existing include renders
+# the links with no template change at all.
+#
+# bluesky resolves to the site's own domain handle, openstageis.land (the
+# custom domain carries the _atproto DNS TXT record). social-links.html prefixes
+# https://bsky.app/profile/, so the rendered link is
+# https://bsky.app/profile/openstageis.land — one canonical identity for the
+# site, the domain and the feed.
+github: openstageisland
+sponsors: openstageisland
+bluesky: openstageis.land
+website: https://openstageis.land

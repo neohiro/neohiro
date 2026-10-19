@@ -1,0 +1,97 @@
+title: neohiro
+description: "Security hardening & privacy tools for Windows and Linux."
+url: "https://neohiro.github.io"
+baseurl: ""
+github_username: neohiro
+github_repo: neohiro.github.io
+
+# Chrome identity for the shared chrome includes (_includes/bottom-bar.html).
+# See the note in frenzypenguin-media.github.io/_config.yml: `github_username`
+# is shared with FPM and cannot identify a site. One of:
+# fpm | neohiro | osi | transhumanists
+shell: neohiro
+
+# >>> top-bar contract (managed by template-shared/site_forge.py)
+# Top-bar contract. Rendered by _includes/nav.html — ONE template serves
+# every site in the network; only these lists differ. Format is
+# "Label|url" with an optional trailing drop-priority (2|3|4). Labels MUST
+# stay one word: the bar is not sticky, so a long label is the only thing
+# that can force a wrap on a phone. Only link pages that actually exist.
+github_username: "neohiro"
+sponsor_username: "neohiro"
+dashboard_url: "https://github.com/neohiro/dashboard"
+
+# Visitor counter (SSOT: links-secret/counter-surfaces.spec.yaml)
+# Rendered via _includes/counter-widget.html in _layouts/default.html.
+counter_path: "github.com/neohiro.github.io"
+
+nav_links:
+  - "Tools|/#featured-tools"
+  - "Guides|/#hardening-guides"
+  - "Repos|/repositories/"
+  - "Live|/live.html"
+
+community_links:
+  - "Org|https://github.com/neohiro"
+  - "Bluesky|https://bsky.app/profile/neohiro.bsky.social"
+  - "Bug Reports|https://github.com/neohiro/windows/issues"
+  - "Security|https://github.com/neohiro/windows/security"
+  - "Discussions|https://github.com/neohiro/windows/discussions"
+  - "Heartbeats|/heartbeats/"
+  - "Access|/request-access/"
+  - "Sponsor|https://github.com/sponsors/neohiro"
+
+main_sections:
+  - "Home|#home"
+  - "Signal|#quotes"
+  - "Tools|#featured-tools"
+  - "Guides|#hardening-guides"
+  - "Community|#community"
+
+# Bottom-bar and assistant contract. request_access is the public gate for
+# the private assistant; an empty string means the site has no access page
+# yet and the dock must not link one.
+assistant:
+  request_access: "/request-access/"
+  dashboard_url: "https://github.com/neohiro/dashboard"
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+palette: "purple-matrix"
+fonts: "matrix"
+decor: "matrix"
+decor_class: "decor-matrix decor-scanlines decor-grain"
+font_google: "JetBrains+Mono:wght@400;500;700|Space+Grotesk:wght@400;500;600;700"
+# <<< top-bar contract
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+collections:
+  tools:
+    output: true
+    permalink: /tools/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: "tools"
+    values:
+      layout: "tool"
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .github
+  - README.md
+  - LICENSE
+  - scripts
+  - "*.ps1"
+  - "*.sh"

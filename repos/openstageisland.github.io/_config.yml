@@ -1,0 +1,81 @@
+title: Open Stage Island
+description: "A free, 24/7 open-air music stage in Second Life. Any electronic music artist can take the stage and play to a live audience."
+url: "https://openstageis.land"
+baseurl: ""
+github_username: openstageisland
+github_repo: openstageisland.github.io
+
+# Chrome identity for the shared chrome includes (_includes/bottom-bar.html).
+# See the note in frenzypenguin-media.github.io/_config.yml: `github_username`
+# is shared with FPM and cannot identify a site. One of:
+# fpm | neohiro | osi | transhumanists
+shell: osi
+
+# Visitor counter. Rendered via _includes/counter-widget.html, which this
+# layout includes exactly once (in the footer) so a page view counts once.
+# NOTE: counter-surfaces.spec.yaml still records this site's freevisitorcounters
+# display_id (1631175), but the embeds here migrated to visitor-badge paths
+# (see that partial's changelog note). The path below is the live identity;
+# keep it in sync with any *_SLOT suffixes used by assets/js/live-data.js.
+counter_path: "github.com/openstageisland.github.io"
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# {% seo %} in _layouts/default.html needs this plugin registered. Declared
+# explicitly (rather than relying on the GitHub Pages whitelist) so a local
+# `jekyll build` and the ci.yml build behave the same as production.
+plugins:
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .github
+  - scripts
+  - tests
+  - README.md
+  - LICENSE
+  - "*.ps1"
+  - "*.sh"
+  - migrate-osi-to-org.py
+  - MIGRATION.md
+
+
+# >>> top-bar contract (managed by template-shared/site_forge.py)
+# Top-bar contract. Rendered by _includes/nav.html — ONE template serves
+# every site in the network; only these lists differ. Format is
+# "Label|url" with an optional trailing drop-priority (2|3|4). Labels MUST
+# stay one word: the bar is not sticky, so a long label is the only thing
+# that can force a wrap on a phone. Only link pages that actually exist.
+github_username: "openstageisland"
+sponsor_username: "openstageisland"
+dashboard_url: "https://github.com/neohiro/dashboard"
+
+nav_links:
+  - "Home|/"
+  - "Live|/live.html|3"
+
+community_links:
+  - "Org Overview|https://github.com/openstageisland"
+  - "Bluesky|https://bsky.app/profile/openstageis.land"
+  - "neohiro|https://neohiro.github.io/"
+  - "Sponsor|https://github.com/sponsors/openstageisland"
+
+# Bottom-bar and assistant contract. request_access is the public gate for
+# the private assistant; an empty string means the site has no access page
+# yet and the dock must not link one.
+assistant:
+  request_access: ""
+  dashboard_url: "https://github.com/neohiro/dashboard"
+
+palette: "purple-matrix"
+fonts: "matrix"
+decor: "aurora"
+decor_class: "decor-aurora decor-grain"
+font_google: "JetBrains+Mono:wght@400;500;700|Space+Grotesk:wght@400;500;600;700"
+# <<< top-bar contract

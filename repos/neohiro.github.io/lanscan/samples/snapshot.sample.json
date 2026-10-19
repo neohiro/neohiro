@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "tool": { "name": "LANScan", "version": "2.0.0-sample" },
+  "generated_at": "2026-10-04T09:00:00.000000Z",
+  "host": { "hostname": "sample-host", "os": "SampleOS 2", "arch": "x86_64" },
+  "scan": {
+    "mode": "active",
+    "iface": "eth0",
+    "subnet": "192.168.1.0/24",
+    "started_at": "2026-10-04T08:59:58.600000Z",
+    "duration_s": 1.4,
+    "requests_sent": 254,
+    "replies": 4
+  },
+  "interfaces": [
+    {
+      "name": "eth0", "ip": "192.168.1.10", "netmask": "255.255.255.0",
+      "mac": "02:00:00:00:00:10", "mtu": 1500, "state": "up", "speed_mbps": 1000,
+      "rx_bytes": 91238472910, "tx_bytes": 22118831040,
+      "rx_bps": 12400000, "tx_bps": 2100000,
+      "rx_errors": 0, "tx_errors": 0
+    }
+  ],
+  "lan": {
+    "subnet": "192.168.1.0/24",
+    "gateway": { "ip": "192.168.1.1", "mac": "02:00:00:00:00:01" },
+    "counts": { "online": 3, "total": 4, "edge": 3 },
+    "devices": [
+      {
+        "ip": "192.168.1.1", "mac": "02:00:00:00:00:01", "hostname": "router.lan",
+        "vendor": "Sample Networks", "kind": "gateway", "is_gateway": true, "iface": "eth0",
+        "state": "online", "rtt_ms": 0.84,
+        "first_seen": "2026-10-03T09:00:00.000000Z", "last_seen": "2026-10-04T08:59:58.800000Z",
+        "sources": ["arp", "ssdp"],
+        "services": [{ "port": 80, "proto": "tcp", "name": "http", "state": "open" }]
+      },
+      {
+        "ip": "192.168.1.20", "mac": "02:00:00:00:00:20", "hostname": "nas",
+        "vendor": "Sample NAS", "kind": "nas", "iface": "eth0",
+        "state": "online", "rtt_ms": 0.31,
+        "first_seen": "2026-09-19T12:00:00.000000Z", "last_seen": "2026-10-04T08:59:59.100000Z",
+        "sources": ["arp", "mdns"], "services": []
+      },
+      {
+        "ip": "192.168.1.44", "mac": "02:00:00:00:00:44", "hostname": "",
+        "vendor": "Sample IoT Co", "kind": "camera", "iface": "eth0",
+        "state": "new", "rtt_ms": 4.2,
+        "first_seen": "2026-10-04T08:59:56.000000Z", "last_seen": "2026-10-04T08:59:56.000000Z",
+        "sources": ["arp"], "services": [],
+        "update": { "available": true, "current": "1.4.2", "latest": "1.6.0", "source": "local-manifest" }
+      },
+      {
+        "ip": "192.168.1.77", "mac": "02:00:00:00:00:77", "hostname": "workstation",
+        "vendor": "Sample Corp", "kind": "laptop", "iface": "eth0",
+        "state": "offline",
+        "first_seen": "2026-08-01T09:00:00.000000Z", "last_seen": "2026-10-04T08:00:00.000000Z",
+        "sources": ["arp"], "services": []
+      }
+    ]
+  },
+  "usb": {
+    "hubs": 2,
+    "supported": true,
+    "counts": { "total": 2 },
+    "devices": [
+      {
+        "port": "1-2", "vendor_id": "0bda", "product_id": "0129",
+        "vendor": "Sample Semi", "product": "USB Hub", "device_class": "Hub",
+        "serial": "HUB0129", "speed_mbps": 480, "max_power_ma": 100, "hub": "1-0"
+      },
+      {
+        "port": "1-2.3", "vendor_id": "0781", "product_id": "5591",
+        "vendor": "Sample Storage", "product": "Extreme SSD", "device_class": "Mass Storage",
+        "serial": "4C530001120611", "speed_mbps": 10000, "max_power_ma": 900,
+        "product_firmware": "3.20", "driver": "usb-storage", "driver_version": "1.0",
+        "update": { "available": true, "current": "3.20", "latest": "3.40", "source": "local-manifest" }
+      }
+    ]
+  },
+  "drivers": {
+    "counts": { "total": 2 },
+    "devices": [
+      {
+        "device": "Sample Gigabit Ethernet", "bus": "pci", "driver": "sample_e1000e",
+        "version": "3.20.4", "provider": "Sample Inc.", "date": "2025-11-02", "signed": "yes",
+        "update": { "available": true, "current": "3.20.4", "latest": "3.24.0", "source": "pkg:apt" }
+      },
+      {
+        "device": "Extreme SSD", "bus": "usb", "driver": "usb-storage", "version": "1.0",
+        "provider": "Linux kernel", "date": "2026-08-14", "signed": "yes",
+        "update": { "available": false, "current": "1.0" }
+      }
+    ]
+  },
+  "system": {
+    "os": "SampleOS 2", "kernel": "6.12.0-sample", "arch": "x86_64",
+    "hostname": "sample-host", "uptime_s": 372345,
+    "cpu": { "model": "Sample CPU @ 3.40GHz", "cores": 8, "load_percent": 17 },
+    "memory": { "total": 34359738368, "used": 12884901888, "available": 21474836480, "percent": 37 },
+    "disks": [{ "mount": "/", "total": 494384795648, "used": 128849018880, "percent": 26 }],
+    "network": { "rx_bps": 12400000, "tx_bps": 2100000 }
+  },
+  "tests": [
+    { "name": "arp-sweep", "target": "192.168.1.0/24", "status": "pass", "duration_ms": 1400, "detail": "254 probes, 4 replies" },
+    { "name": "mdns-listen", "target": "udp/5353", "status": "pass", "duration_ms": 1200, "detail": "2 services announced" },
+    { "name": "ssdp-probe", "target": "239.255.255.250:1900", "status": "skip", "duration_ms": 0, "detail": "no multicast route" },
+    { "name": "gateway-arp", "target": "192.168.1.1", "status": "pass", "duration_ms": 4, "detail": "" }
+  ],
+  "updates": { "pending": 3, "sources": ["local-manifest", "pkg:apt"], "checked_at": "2026-10-04T09:00:00.000000Z" },
+  "privacy": {
+    "telemetry": false,
+    "storage": "memory+localStorage",
+    "network_calls": [],
+    "binds": "127.0.0.1:8787"
+  }
+}

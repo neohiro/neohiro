@@ -1,0 +1,7 @@
+# Ecosystem entries surfaced in the home-page Featured Tools grid.
+#
+# These are not neohiro repositories, so they are kept out of _data/repos.yml
+# (which is a strict mirror of _tools/*.md and drives /repositories/). They render
+# as the same .tool-card so the grid stays visually uniform, with the accent and
+# pill colours driven by the same CSS variables as the rest of the site.
+entries:

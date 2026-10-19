@@ -1,0 +1,177 @@
+name: Milestone Check & Update
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Fetch and validate but skip commits"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/milestone-check.yml"
+      - "scripts/sync_milestones.py"
+      - "scripts/sync_layers.py"
+      - "scripts/scrape_historical_milestones.py"
+      - "scripts/metric_coverage.py"
+      - "data/metric_coverage_baseline.json"
+      - "data/metric_coverage_debt.json"
+      - "data/historical_milestones.json"
+
+permissions:
+  contents: write
+
+env:
+  # How many catalog entries the historical backfill may ingest per run. Small on
+  # purpose: one tick must not be able to rewrite the archive wholesale, so any
+  # bad batch stays easy to spot and revert. Overridable per-run by setting the
+  # variable in the job; previously it was read from the environment but never
+  # defined anywhere, so the fallback was the only value it ever took.
+  HISTORICAL_BACKFILL_LIMIT: 5
+
+concurrency:
+  # Both world_layers.json writers share this group so a crisis-zone refresh
+  # and a layer sync never run concurrently; queued (not cancelled) runs are
+  # allowed so an in-flight auto-commit is never interrupted.
+  group: "map-data-writers"
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run milestone sync
+        env:
+          DRY_RUN: ${{ inputs.dry_run == 'true' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python scripts/sync_milestones.py --dry-run
+          else
+            python scripts/sync_milestones.py
+            # Backfill the historical archive only when the live feed brought
+            # nothing new, so a busy upstream cannot starve the archive.
+            #
+            # Keyed on whether the sync actually touched data/, NOT on the text it
+            # printed. The previous version grepped the output for a magic string,
+            # which stops working silently the moment the wording changes: the
+            # backfill would simply stop running and nothing would fail.
+            if git diff --quiet -- data/; then
+              echo "No content changes - backfilling historical archive"
+              python scripts/scrape_historical_milestones.py --limit "${HISTORICAL_BACKFILL_LIMIT:-5}"
+              # Fold the newly ingested records into the published feed.
+              python scripts/sync_milestones.py
+            fi
+          fi
+
+      - name: Sync operational layers (conflicts + deployments)
+        env:
+          DRY_RUN: ${{ inputs.dry_run == 'true' }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python scripts/sync_layers.py
+          else
+            python scripts/sync_layers.py --write
+          fi
+
+      - name: Report milestone coverage
+        # The cron only ever reports what changed. This reports what is missing -
+        # empty years on the slider, verticals with nothing in them, unlocated
+        # records - so the backlog is visible in the run log without a local setup.
+        # --snapshot also appends to data/coverage_history.json, but only when the
+        # findings actually changed, so the committed file is a changelog of progress
+        # toward filling the gaps rather than a timestamp every six hours.
+        run: python scripts/coverage_report.py --snapshot
+
+      - name: Report metric comparability
+        # Widening the source list makes the raw record count go up, which reads
+        # as progress. It is not: a record whose value is its own title can never
+        # be ranked against anything. This reports, per (category, subcategory),
+        # the share of records carrying a number AND a unit, and whether those
+        # records agree on the unit - the two things that decide whether the
+        # published set can be compared at all.
+        run: python scripts/metric_coverage.py
+
+      - name: Reject null-island geocoding
+        # (0,0) is upstream's "unknown location" sentinel. Storing it plots a dot
+        # in the Gulf of Guinea, and check_events has always rejected it while
+        # check_milestones used to accept it - so it reached main from a green run.
+        run: python scripts/coverage_report.py --fail-on-null-island --quiet
+
+      - name: Gate metric comparability
+        # Fails the job when this run made the published set HARDER to compare:
+        # a subcategory holding fewer records that carry a number and a unit
+        # than the baseline recorded. The ratchet is the absolute count, not the
+        # share.
+        #
+        # The share cannot be the ratchet: it falls every time the sync discovers
+        # a milestone with no metric, and discovery is what the sync is for. The
+        # previous gate keyed on the share, so it rejected the batch it had just
+        # discovered - and since this step runs BEFORE the commit step, those
+        # records could never land. Each run re-discovered them and failed
+        # identically: ~100 consecutive red runs over 12 days, and no data
+        # refresh reaching main at all.
+        #
+        # Mixed units and below-floor new subcategories are curation debt. They
+        # arrive with every batch the scraper discovers and need a human to
+        # decide whether the record's unit or its subcategory is wrong, so they
+        # are recorded rather than enforced: --record-debt writes them to
+        # data/metric_coverage_debt.json, which accumulates into a ledger showing
+        # what to reconcile instead of an alert that must be cleared before
+        # anything can ship. Add --advisory to make the debt blocking while
+        # working through it.
+        #
+        # The baseline is a ratchet: when comparability genuinely improves,
+        # re-record it with --update-baseline so the bar moves up rather than
+        # drifting.
+        run: python scripts/metric_coverage.py --gate --record-debt
+
+      - name: Publish invariants
+        # Before the commit, alongside validate data files: a refresh that breaks a
+        # cross-file invariant must fail the job and never reach main.
+        run: python scripts/publish_invariants.py
+
+      - name: Validate data files
+        # Gate BEFORE the commit: a malformed sync must fail the job and never
+        # reach main (the CI job only reports afterwards).
+        run: python scripts/check_data.py
+
+      - name: Commit and push changes
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/ scripts/
+          if git diff --cached --quiet; then
+            echo "No data changes"
+            exit 0
+          fi
+          ts=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          git commit -m "chore(milestone-check): refresh milestone & layer data ${ts}"
+          # The remote can advance while this job runs (a scheduled run collides
+          # with a manual push). Rebase onto the latest main, then retry once;
+          # fail loudly rather than silently dropping a data refresh.
+          if git push origin main; then
+            echo "Pushed data refresh to main"
+          else
+            echo "Push rejected (remote moved?) - rebasing and retrying..."
+            git pull --rebase origin main
+            git push origin main
+            echo "Pushed data refresh to main (after rebase)"
+          fi

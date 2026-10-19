@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="160" viewBox="0 0 600 160">
+  <rect width="600" height="160" fill="#080a0e"/>
+  <text x="20" y="22" font-size="14" fill="#00aaff" font-family="monospace" font-weight="bold">neohiro — Heartbeat (authed)</text>
+  <text x="20" y="40" font-size="10" fill="#888" font-family="monospace">score: 87/100 · 24 repos · 3 CI red</text>
+  <rect x="20" y="46" width="560" height="6" fill="#1a1a1a"/>
+  <rect x="20" y="46" width="487" height="6" fill="#00aaff"/>
+  <text x="20" y="70" font-size="9" fill="#00aaff" font-family="monospace">Brain: 92 (last commit 2h ago)</text>
+  <text x="240" y="70" font-size="9" fill="#00aaff" font-family="monospace">Voicemail: 95</text>
+  <text x="380" y="70" font-size="9" fill="#00aaff" font-family="monospace">network: 85</text>
+  <text x="20" y="86" font-size="9" fill="#00aaff" font-family="monospace">Mouth: 88 (CI green)</text>
+  <text x="240" y="86" font-size="9" fill="#00aaff" font-family="monospace">Heart: 90 (heartbeat OK)</text>
+  <text x="20" y="110" font-size="9" fill="#666" font-family="monospace">Intakes 24h: 12</text>
+  <text x="180" y="110" font-size="9" fill="#666" font-family="monospace">Categories: 15 (1 unreviewed)</text>
+  <text x="400" y="110" font-size="9" fill="#666" font-family="monospace">Envelope: 124/124 ok</text>
+  <text x="20" y="126" font-size="9" fill="#666" font-family="monospace">Strangers: 8 · Users: 4 · Admin: 0 · Godadmin: 0</text>
+  <text x="20" y="148" font-size="7" fill="#444" font-family="monospace">updated: 2026-08-30T00:00:00Z — CNS</text>
+</svg>
