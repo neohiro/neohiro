@@ -55,5 +55,6 @@ multiboot_load_slot(SLOT_RADIO); // base radio fallback
 - `SX1262Router_gate()` blocks all transmission until validation + listen-clear pass
 - Priority arbitration: repeaters (255) preempt low-priority slots (0) for TX only; RX stays continuous
 - Zero dead code, zero `TODO`/`FIXME`; audited by `tests/` and `Select-String`
+- Strict gate on device build: `-Werror -Wconversion -Wsign-conversion -Wshadow` (framework headers are `-isystem`)
 - Backward-compatible: existing slot offsets preserved; new roles append cleanly
 - Verified build: `pio run -e heltec_v4_bridge` → SUCCESS (RAM 5.7%, Flash 11.2%)
