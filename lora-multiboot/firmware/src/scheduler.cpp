@@ -1,8 +1,23 @@
 #include "scheduler.h"
 #include <string.h>
+#include "radio_arbiter.h"
 
 static concurrent_task_t s_tasks[MAX_CONCURRENT];
 static uint32_t s_tick = 0;
+
+/* A slot's priority follows the role it was provisioned with: the two
+ * live frameworks are repeaters and must preempt anything else, the radio
+ * slot is normal, and an unrecognised slot stays low so it never blocks
+ * a real one. See docs/PRIORITY.md. */
+static uint8_t priority_for_slot(uint32_t slot_id) {
+    const slot_config_t* s = multiboot_slot_info(slot_id);
+    if (s == NULL) return PRIORITY_LOW;
+    if (s->role_mask & (ROLE_MESHTASTIC | ROLE_MESHCORE | ROLE_REPEATER)) {
+        return PRIORITY_CRITICAL;
+    }
+    if (s->role_mask & ROLE_RADIO) return PRIORITY_NORMAL;
+    return PRIORITY_LOW;
+}
 
 void scheduler_init(void) {
     memset(s_tasks, 0, sizeof(s_tasks));
@@ -18,6 +33,7 @@ bool scheduler_start_slot(uint32_t slot_id, uint32_t slice_ms) {
             s_tasks[i].running = true;
             s_tasks[i].slice_ms = (slice_ms > 0 ? slice_ms : 10);
             s_tasks[i].last_run_ms = s_tick;
+            s_tasks[i].priority = priority_for_slot(slot_id);
             return true;
         }
     }
@@ -28,6 +44,8 @@ bool scheduler_stop_slot(uint32_t slot_id) {
     for (int i = 0; i < MAX_CONCURRENT; ++i) {
         if (s_tasks[i].running && s_tasks[i].slot_id == slot_id) {
             s_tasks[i].running = false;
+            /* A slot that is no longer running must not keep the radio. */
+            arbiter_release(slot_id);
             return true;
         }
     }
@@ -41,7 +59,12 @@ void scheduler_tick(void) {
         if (s_tasks[i].running) {
             if ((s_tick - s_tasks[i].last_run_ms) >= s_tasks[i].slice_ms) {
                 s_tasks[i].last_run_ms = s_tick;
-                // Concurrent execution: arbitration / context-switch here
+                /* The slot's turn is up. Ask the arbiter for the radio and
+                 * hold it for the slice; the arbiter hands it back on its
+                 * own when the slice elapses, and a higher-priority slot
+                 * can take it over in the meantime. */
+                (void)arbiter_request(s_tasks[i].slot_id, s_tasks[i].slice_ms,
+                                      s_tasks[i].priority);
             }
         }
     }

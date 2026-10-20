@@ -40,6 +40,7 @@ void setup() {
 
 void loop() {
     scheduler_tick();
+    arbiter_tick();
     WebTerminal_tick();
     relay_tick(&s_ctx);
 }

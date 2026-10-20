@@ -57,5 +57,8 @@ bool relay_tick(shared_context_t* ctx) {
      * in which case the frame stays un-relayed and is retried later. */
     const bool granted = arbiter_request(owner, 10, 1);
     ctx->relayed = granted;
+    if (granted) {
+        arbiter_release(owner);  /* frame handled — don't leak the grant */
+    }
     return granted;
 }
