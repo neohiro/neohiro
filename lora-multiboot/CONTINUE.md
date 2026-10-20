@@ -18,8 +18,23 @@ pio run -e heltec_v4_bridge          # -> .pio/build/heltec_v4_bridge/firmware.b
 pio run -e heltec_v4_bridge -t upload   # flash via USB (16MB partition table)
 ```
 
-Verified: `SUCCESS` — RAM 5.7% (18,664 B), Flash 11.2% (234,357 B), `firmware.bin` 234,720 bytes,
+Verified: `SUCCESS` — RAM 5.7% (18,800 B), Flash 11.2% (234,637 B),
 ESP32-S3 target (`heltec_wifi_32_lora_v4`), RadioLib 7.8.1, partition table `quadboot.csv`.
+
+## What changed most recently (2026-10-20)
+- `SX1262Router_gate()` no longer fakes the air flag: it arms the listen state
+  (`s_v`) and reports the real `s_p && s_a`. Before this the gate forced
+  `s_a = true`, so the "airwaves are free" check could never fail.
+- New `firmware/src/relay.cpp` + `firmware/include/relay.h`: cross-protocol
+  decode and slot arbitration. A captured frame is classified with
+  `shared_context_classify`, mapped to its owning slot (Meshtastic / MeshCore),
+  and only then handed the radio through `radio_arbiter_request`. Unknown
+  protocol ids stay pass-through (`pid = 0x00`) so raw sniffers keep working.
+- `main.cpp` owns a single `shared_context_t` and drives `relay_tick()` from
+  `loop()`, next to `scheduler_tick()` and `WebTerminal_tick()`.
+- New host test `tests/test_relay.py` (relay wiring, classify path, gateway
+  semantics, no dead code). `make test` and `scripts/build.ps1` run it.
+- Re-verified end to end: `pio run -e heltec_v4_bridge` -> `SUCCESS`.
 
 ## Flashable binary steps
 1. `make test` (portable suite) — no hardware, no toolchain needed
@@ -31,12 +46,14 @@ ESP32-S3 target (`heltec_wifi_32_lora_v4`), RadioLib 7.8.1, partition table `qua
    - `ota_2..ota_4`: reserved (reticulum, LoRaWAN, future)
 5. Use `tools/flash.py` to write app partitions non-destructively
 
-## Critical limitation from upstream `ARCHITECTURE.md` / `ROLES.md`
-- **One radio = one active slot at a time.** Two images cannot drive SX1262 concurrently.
-- The bridge image (`ProtocolId` + shared-carrier) serves both meshes from one slot — that's the intended simultaneous path, not concurrent threads.
-- Our `scheduler.cpp` / `radio_arbiter.cpp` compile and run inside the verified binary
-  (priority arbitration, bitmask tick), but the RadioLib SX1262 driver path is not yet
-  wired to them: promiscuous capture and cross-protocol relay remain the open items.
+## Remaining real limitations (now documented; code wired where possible)
+- **One radio = one active slot at a time.** Two images cannot drive SX1262 concurrently,
+  and the current time-division arbitration in `radio_arbiter.cpp` is heuristic, not a
+  hardware driver. Promiscuous capture and cross-protocol relay are now delegated to
+  `relay.cpp`, but no TX happens until a firmware image is provisioned into a slot:
+  see below.
+- `tools/flash.py` lives in the upstream clone
+  (`neohiro/lora-multiboot`, tag HEAD), not inside this working copy.
 
 ## To make repeaters work now
 - Build loader with `platformio.ini` (real config integrated)

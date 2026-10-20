@@ -17,6 +17,8 @@ try {
         "firmware/src/multiboot.cpp",
         "firmware/src/SX1262Router.cpp",
         "firmware/src/WebTerminal.cpp",
+        "firmware/src/relay.cpp",
+        "firmware/include/relay.h",
         "firmware/include/multiboot.h",
         "firmware/platformio.ini",
         "firmware/partitions/quadboot.csv"
@@ -33,6 +35,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "test_concurrent failed" }
     python tests/test_safety_bounds.py
     if ($LASTEXITCODE -ne 0) { throw "test_safety_bounds failed" }
+    python tests/test_relay.py
+    if ($LASTEXITCODE -ne 0) { throw "test_relay failed" }
 
     if (-not $SkipFirmware) {
         Write-Host "[lora-multiboot] Building firmware ($Env)..."

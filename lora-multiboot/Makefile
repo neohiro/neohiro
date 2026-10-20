@@ -10,6 +10,7 @@ test: check
 	python tests/test_slots.py
 	python tests/test_concurrent.py
 	python tests/test_safety_bounds.py
+	python tests/test_relay.py
 	echo "[gate] all tests passed"
 firmware:
 	cd firmware && pio run -e heltec_v4_bridge

@@ -3,13 +3,16 @@
  * Arduino framework contract: setup() once, loop() repeatedly.
  */
 #include <Arduino.h>
+#include <string.h>
 #include "multiboot.h"
 #include "scheduler.h"
 #include "radio_arbiter.h"
 #include "SX1262Router.hpp"
 #include "WebTerminal.hpp"
+#include "relay.h"
 
 static bool s_tx_enabled = false;
+static shared_context_t s_ctx;
 
 void setup() {
     multiboot_init();
@@ -20,6 +23,8 @@ void setup() {
     multiboot_set_dual_run(true);
     multiboot_load_concurrent(SLOT_MESHTASTIC);
     multiboot_load_concurrent(SLOT_MESHCORE);
+    memset(&s_ctx, 0, sizeof(s_ctx));
+    relay_init();
 
     // Gate: nothing transmits until validation passes AND airwaves are free
     const bool gate = SX1262Router_gate();
@@ -36,4 +41,5 @@ void setup() {
 void loop() {
     scheduler_tick();
     WebTerminal_tick();
+    relay_tick(&s_ctx);
 }
