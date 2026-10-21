@@ -1,0 +1,14 @@
+# pack-refs with: peeled fully-peeled sorted 
+963cd5b5e273c8052163fc8c6881a2069fe84400 refs/remotes/origin/add-ecosystem-network-1768719182
+751c00800e0f8ab745eff466d11b27cc7f56caf8 refs/remotes/origin/add-ecosystem-network-257863922
+ef19a980bf840850991400148d41fade5ef8b051 refs/remotes/origin/ci/publish-gates-and-workflow-fix
+8cb4c5d1d8e92283531f2ba75070ba9d84585503 refs/remotes/origin/feat/section-nav-guide-chrome
+b68be5022810985382cdace8fa7f69dad2b5724e refs/remotes/origin/feat/unified-chrome-contract
+c8c03391b825eb6fcd14e8e593e02d546dc50bc2 refs/remotes/origin/fix/heartbeat-workflow-yaml
+3dc0a8f2e9fee8ebb83dbb88651588818f0dd209 refs/remotes/origin/fix/public-caller-private-doctor
+9ab9e00da4d700e9ee37e80b1ca2e0292622e6fc refs/remotes/origin/fix/token-gate-robustness
+25ffa827606e91ee3b2f8b1703e3c647c1988fbd refs/remotes/origin/fix/workflow-yaml-regression-gate
+3e7034af5ec3b3c69fc38fbc7b6f5ee6c1fa023d refs/remotes/origin/main
+e54227d2ef317af8d23971e8c09200998da09032 refs/remotes/origin/master
+faa1abf991ddb249a42ce953ca943016d2fe8e26 refs/remotes/origin/sync/pr7-reconcile
+402c1ce54e96916374a817805ecc41c6b4491613 refs/remotes/origin/wire/doctor-own-account
