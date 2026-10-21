@@ -1,6 +1,0 @@
-# pack-refs with: peeled fully-peeled sorted 
-ad3344b673045a9f7e8d480fb3a6eff9fa6afc9e refs/remotes/origin/chore/site-updates
-136642a2e2fa16884c2a1b6f049b768770bb87bd refs/remotes/origin/fix/matrix-canvas-fixed-bg
-7e0b8c25b843f5a1b6523c0f62da88dcd71812f6 refs/remotes/origin/main
-68f8698b3b4bb42ac317390357375d56a2562646 refs/remotes/origin/master
-bbb18679de9a03c7a09a3e922a3ed5971e14dec6 refs/remotes/origin/neohiro-doctor/add-doctor-sync
